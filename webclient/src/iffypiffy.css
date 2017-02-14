@@ -2,7 +2,7 @@
 
 html, body {
     margin: 0;
-    height: 99%;
+    height: 98%;
 }
 
 .output p {
@@ -22,7 +22,7 @@ html, body {
     hyphens: auto;
     font-family: 'Kreon', serif;
     width: 400pt;
-    max-height: calc(100% - 11em);
+    max-height: calc(100% - 12em);
     font-size: 14pt;
     color: grey;
     resize: horizontal;
