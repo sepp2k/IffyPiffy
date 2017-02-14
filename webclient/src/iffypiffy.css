@@ -1,0 +1,50 @@
+@import 'https://fonts.googleapis.com/css?family=Kreon';
+
+html, body {
+    margin: 0;
+    height: 99%;
+}
+
+.output p {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.output p + p {
+    text-indent: 1.5em;
+    margin-top: 0;
+}
+
+#story {
+    display: none;
+    margin: 5px;
+    text-align: justify;
+    hyphens: auto;
+    font-family: 'Kreon', serif;
+    width: 400pt;
+    max-height: calc(100% - 11em);
+    font-size: 14pt;
+    color: grey;
+    resize: horizontal;
+    overflow: auto;
+    border: solid 1pt grey;
+    padding: 0.5em;
+}
+
+#input {
+    display: none;
+}
+
+#story .current {
+    color: black;
+}
+
+#story .input:before {
+    content: '> ';
+}
+
+#story .input {
+    font-style: italic;
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+}
