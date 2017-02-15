@@ -39,7 +39,7 @@
           outputArea.append(latestInput);
           iffy.story.input(input);
           iffy.executeStep();
-          outputArea.animate({scrollTop: latestInput.offset().top - outputArea.offset().top}, 500);
+          outputArea.scrollTo(latestInput, 500);
         }
       });
     },
