@@ -21,6 +21,7 @@
       inputArea.val("");
       outputArea.show();
       inputArea.show();
+      inputArea.focus();
       this.story = story;
       story.start();
       this.executeStep();
