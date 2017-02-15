@@ -15,12 +15,6 @@
   var title = $("#story-title");
   var latestOutput = null;
   var latestInput = null;
-  function append(message) {
-    outputArea.append(message);
-    // TODO: Handle the case where the appended message takes up more than one screen
-    var scrollHeight = Math.max(outputArea[0].scrollHeight, outputArea[0].clientHeight);
-    outputArea[0].scrollTop = scrollHeight - outputArea[0].clientHeight;
-  }
   return {
     loadStory: function(story) {
       outputArea.text("");
@@ -41,9 +35,10 @@
             latestInput.removeClass("current");
           }
           latestInput = $('<div class="input current">' + input + '</div>');
-          append(latestInput);
+          outputArea.append(latestInput);
           iffy.story.input(input);
           iffy.executeStep();
+          outputArea.animate({scrollTop: latestInput.offset().top - outputArea.offset().top}, 500);
         }
       });
     },
@@ -52,7 +47,7 @@
         latestOutput.removeClass("current");
       }
       latestOutput = $('<div class="output current">' + htmlify(this.story.latestMessage) + '</div>');
-      append(latestOutput);
+      outputArea.append(latestOutput);
       if(this.story.isFinished) {
         inputArea.hide();
       }
