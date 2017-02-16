@@ -1,0 +1,23 @@
+{
+  "name": "iffypiffy-compiler",
+  "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "main": "js/main.js",
+  "scripts": {
+    "clean": "rm -rvf js src/ts/antlr-gen",
+    "antlr4ts": "antlr4ts -visitor -o src/ts/antlr-gen src/antlr/IffyPiffy.g4",
+    "build": "npm run antlr4ts && tsc -p .",
+    "run": "npm run build && node js/main.js"
+  },
+  "author": "Sebastian Hungerecker <sepp2k@googlemail.com>",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@types/node": "^7.0.5",
+    "antlr4ts": "^0.4.0-alpha.4"
+  },
+  "devDependencies": {
+    "antlr4ts-cli": "^0.4.0-alpha.4",
+    "typescript": "^2.1.6"
+  }
+}

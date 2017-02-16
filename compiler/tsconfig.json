@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "umd",
+        "target": "es6",
+        "lib": ["es6"],
+        "outDir": "js",
+        "rootDir": "src/ts",
+        "types": ["antlr4ts", "@types/node"],
+        "baseUrl": "node_modules",
+        "experimentalDecorators": true,
+        "alwaysStrict": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "sourceMap": true
+    },
+    "include": ["src/ts/**/*.ts"]
+}
