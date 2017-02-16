@@ -6,7 +6,7 @@
   "main": "js/main.js",
   "scripts": {
     "clean": "rm -rvf js src/ts/antlr-gen",
-    "antlr4ts": "antlr4ts -visitor -o src/ts/antlr-gen src/antlr/IffyPiffy.g4",
+    "antlr4ts": "cd src/antlr && antlr4ts -visitor -o ../ts/antlr-gen IffyPiffy.g4",
     "build": "npm run antlr4ts && tsc -p .",
     "run": "npm run build && node js/main.js"
   },
