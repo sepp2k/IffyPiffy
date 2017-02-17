@@ -1,5 +1,5 @@
 grammar IffyPiffy;
-story: globalStatements=definition* EOF;
+story: globalDefs+=definition* EOF;
 
 statement:
     definition                                         # DefinitionStatement
