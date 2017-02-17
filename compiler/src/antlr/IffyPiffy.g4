@@ -22,8 +22,7 @@ definition:
   // variables, object members and array slots. Other kinds of expressions
   // will be rejected later.
   // We allow a parameter list after the lhs, so we can assign a function by
-  // writing name(params) = body. For that lhs should be a variable, but again
-  // we'll check this at a later stage.
+  // writing name(params) = body.
   | lhs=expr paramList? body=defBody                   # Assignment
   | '\n'                                               # EmptyStatement
 ;
