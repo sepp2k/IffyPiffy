@@ -1,0 +1,39 @@
+story.title = "Office Tour"
+story.description = "A virtual tour through our office"
+startingRoom = ourOffice
+
+Room ourOffice
+    description = "It stinks"
+    items = [chair1, chair2, laptop]
+end
+
+def laptopHasBeenTouched = false
+
+Item Chair
+    def chairType = abstract
+
+    onTouch()
+        if laptopHasBeenTouched
+            say("You're touching the $chairType")
+        else
+            say("You can't touch the chair unless you touch the laptop first (because ... reasons)")
+        end
+    end
+end
+
+Chair chair1
+    chairType = "Malte-Chair"
+    description = "The back of the chair has broken off"
+end
+
+Chair chair2
+    chairType = "ISP-Chair"
+    description = "Another chair"
+end
+
+Item laptop
+    description = "It's about to lift off (quality Apple tech)"
+    onTouch()
+        laptopHasBeenTouched = true
+    end
+end
