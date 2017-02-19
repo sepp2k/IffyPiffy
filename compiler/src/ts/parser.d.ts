@@ -1,0 +1,1 @@
+export declare var parser: { parse: (x: string) => {} }
