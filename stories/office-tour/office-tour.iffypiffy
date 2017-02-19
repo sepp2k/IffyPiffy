@@ -7,12 +7,10 @@ Room ourOffice
     items = [chair1, chair2, laptop]
 end
 
-def laptopHasBeenTouched = false
-
 Item Chair
-    def chairType = abstract
+    def chairType: String
 
-    onTouch()
+    onTouch() =
         if laptopHasBeenTouched
             say("You're touching the $chairType")
         else
@@ -32,8 +30,10 @@ Chair chair2
 end
 
 Item laptop
+    def hasBeenTouched = false
+
     description = "It's about to lift off (quality Apple tech)"
-    onTouch()
-        laptopHasBeenTouched = true
+    onTouch() =
+        hasBeenTouched = true
     end
 end
