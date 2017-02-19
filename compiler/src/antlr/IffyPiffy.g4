@@ -1,19 +1,20 @@
 grammar IffyPiffy;
-story: globalDefs+=definition* EOF;
+
+story: statements+=globalStmnt* EOF;
 
 statement:
-    definition                                         # DefinitionStatement
+    globalStmnt                                        # GlobalStatement
   | 'if' condition=expr ('\n'? 'then' '\n'? | '\n')
       thenCase+=statement* 'else' elseCase+=statement*
       'end' '\n'?                                      # IfStatement
   | expr '\n'                                          # ExpressionStatement
 ;
 
-objectBody: defs=definition*;
+objectBody: statements+=globalStmnt*;
 
-definition:
+globalStmnt:
     type=ID name=ID '\n'? objectBody '\n'? 'end' '\n'? # ObjectDef
-  | 'def' name=ID paramList? body=defBody              # VarDef
+  | 'def' name=ID paramList? body=defBody              # SimpleDef
   // Technically an assignment is not a definition, but we want to allow it
   // everywhere where definitions are allowed (inside objects, at the toplevel),
   // not just where statements are allowed (i.e. in methods), so we put it here
