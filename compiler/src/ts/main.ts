@@ -1,5 +1,10 @@
 import * as fs from 'fs';
+import * as util from 'util';
 import {parser} from './parser';
+
+function p(obj: Object) {
+    console.log(util.inspect(obj, {depth: undefined}));
+}
 
 var appName = process.argv[0] + " " + process.argv[1];
 if(process.argv.length != 3) {
@@ -14,5 +19,5 @@ fs.readFile(filename, {encoding: "utf-8"}, function (err, source) {
         console.log("Couldn't open the source file: " + err);
         process.exit(2);
     }
-    console.log(parser.parse(source));
+    p(parser.parse(source));
 });
