@@ -3,11 +3,12 @@ export interface Story {
 }
 
 export type TopLevelStatement = Definition | Assignment;
-export type Statement = TopLevelStatement | Expression;
+export type Statement = TopLevelStatement | IfStatement | Expression;
 
 export interface Definition {
     kind: "Definition";
-    name: LExpression;
+    object: LExpression|null;
+    name: string;
     body: Statement[];
 }
 
@@ -17,18 +18,61 @@ export interface Assignment {
     rhs: Expression;
 }
 
+export interface IfStatement {
+    kind: "IfStatement";
+    condition: Expression;
+    thenCase: Statement[];
+    elseCase: Statement[];
+}
+
 export type LExpression = Variable | LMemberAccess | LArrayAccess;
-export type Expression = Variable | MemberAccess | ArrayAccess | FunctionCall;
+export type Expression =
+    Variable
+    | StringLit
+    | NumberLit
+    | BoolLit
+    | ArrayLit
+    | ObjectLit
+    | MemberAccess
+    | ArrayAccess
+    | FunctionCall
+    | Lambda;
 
 export interface Variable {
     kind: "Variable";
-    name: String;
+    name: string;
+}
+
+export interface StringLit {
+    kind: "StringLit";
+    value: string;
+}
+
+export interface NumberLit {
+    kind: "NumberLit";
+    value: number;
+}
+
+export interface BoolLit {
+    kind: "BoolLit";
+    value: boolean;
+}
+
+export interface ArrayLit {
+    kind: "ArrayLit",
+    elements: Expression[]
+}
+
+export interface ObjectLit {
+    kind: "ObjectLit",
+    parent: string,
+    body: TopLevelStatement[]
 }
 
 export interface MemberAccess {
     kind: "MemberAccess";
     receiver: Expression;
-    memberName: String;
+    memberName: string;
 }
 
 export interface ArrayAccess {
@@ -40,7 +84,7 @@ export interface ArrayAccess {
 export interface LMemberAccess extends MemberAccess {
     kind: "MemberAccess";
     receiver: LExpression;
-    memberName: String;
+    memberName: string;
 }
 
 export interface LArrayAccess extends ArrayAccess {
@@ -53,4 +97,10 @@ export interface FunctionCall {
     kind: "FunctionCall";
     func: Expression;
     arguments: Expression[];
+}
+
+export interface Lambda {
+    kind: "Lambda";
+    params: string[];
+    body: Statement[];
 }
