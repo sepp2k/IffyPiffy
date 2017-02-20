@@ -31,6 +31,9 @@
 <<EOF>>                 return 'EOF';
 .                       return 'INVALID';
 /lex
+%{
+    const util = require('./parse-util');
+%}
 
 %start story
 
@@ -46,8 +49,8 @@ story
     ;
 
 globalStatements
-    : globalStatements globalStatement { $$ = $1; $$.push($2); }
-    | globalStatement { $$ = [$1]; }
+    : globalStatements globalStatement { $$ = $1; if($2 !== null) $$.push($2); }
+    | globalStatement { $$ = $1===null ? [] : [$1]; }
     ;
 
 globalStatement
@@ -56,15 +59,27 @@ globalStatement
     // will be rejected later.
     // We allow a parameter list after the lhs, so we can assign a function by
     // writing f(x) = body.
-    : postfix "=" defBody { $$ = {}; }
-    | postfix "(" ")" "=" defBody { $$ = {}; }
+    : postfix "=" expr "\n" { $$ = {kind: "Assignment", lhs: util.expToLExp($1), rhs: $3}; }
+    | postfix "(" ")" "=" defBody {
+        $$ = {
+            kind: "Assignment",
+            lhs: util.expToLExp($1),
+            rhs: {kind: "Lambda", params: [], body: $5}
+        };
+    }
     | postfix "(" paramList ")" "=" defBody { $$ = {}; }
     // TODO: Optionally allow types for non-abstract defs as well
     | DEF ID ":" ID { $$ = {}; }
     | DEF postfix "=" defBody { $$ = {}; }
     | DEF postfix "(" ")" "=" defBody { $$ = {}; }
     | DEF postfix "(" paramList ")" "=" defBody { $$ = {}; }
-    | ID ID "\n" globalStatements END { $$ = {}; }
+    | ID ID "\n" globalStatements END {
+        $$ = {
+            kind: "Assignment",
+            lhs: {kind: "Variable", name: $2},
+            rhs: {kind: "Object", parent: $1, body: $4}
+        };
+    }
     | "\n" { $$ = null; }
     ;
 
@@ -96,7 +111,7 @@ param
     ;
 
 defBody
-    : "\n" statement* END { $$ = $2; }
+    : "\n" statements END { $$ = $2; }
     | expr "\n" { $$ = [$2]; }
     ;
 
@@ -114,13 +129,13 @@ mult
     ;
 
 funCall
-    : postfix "(" ")" { $$ = {}; }
-    | postfix "(" exprList ")" { $$ = {}; }
+    : postfix "(" ")" { $$ = {kind: "FunctionCall", func: $1, arguments: []}; }
+    | postfix "(" exprList ")" { $$ = {kind: "FunctionCall", func: $1, arguments: $3}; }
     | postfix { $$ = $1; }
     ;
 
 postfix
-    : funCall "." ID { $$ = {}; }
+    : funCall "." ID { $$ = {kind: "MemberAccess", receiver: $1, memberName: $3}; }
     | funCall "[" expr "]" { $$ = {}; }
     | prefix { $$ = $1; }
     ;
@@ -133,11 +148,11 @@ prefix
 
 primary
     : ID { $$ = {kind: "Variable", name: $1}; }
-    | STRING { $$ = {}; }
-    | NUMBER { $$ = {}; }
-    | FALSE { $$ = {}; }
-    | TRUE { $$ = {}; }
-    | "[" exprList "]" { $$ = {}; }
+    | STRING { $$ = {kind: "StringLit", value: $1.substring(1, $1.length-1)}; }
+    | NUMBER { $$ = {kind: "NumberLit", value: parseFloat($1)}; }
+    | FALSE { $$ = {kind: "BoolLit", value: false}; }
+    | TRUE { $$ = {kind: "BoolLit", value: true}; }
+    | "[" exprList "]" { $$ = {kind: "ArrayLit", elements: $2}; }
     | "(" expr ")" { $$ = $2; }
     ;
 
