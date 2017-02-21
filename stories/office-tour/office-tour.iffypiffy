@@ -34,6 +34,7 @@ Item laptop
 
     description = "It's about to lift off (quality Apple tech)"
     onTouch() =
+        say("You're touching the laptop")
         hasBeenTouched = true
     end
 end

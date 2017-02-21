@@ -9,7 +9,7 @@ export interface Definition {
     kind: "Definition";
     object: LExpression|null;
     name: string;
-    body: Statement[];
+    body: Statement[]|"abstract";
 }
 
 export interface Assignment {

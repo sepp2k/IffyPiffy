@@ -69,9 +69,20 @@ globalStatement
     }
     | postfix "(" paramList ")" "=" defBody { $$ = {}; }
     // TODO: Optionally allow types for non-abstract defs as well
-    | DEF ID ":" ID { $$ = {}; }
-    | DEF postfix "=" defBody { $$ = {}; }
-    | DEF postfix "(" ")" "=" defBody { $$ = {}; }
+    | DEF ID ":" ID {
+        $$ = {
+            kind: "Definition",
+            object: null,
+            name: $2,
+            body: "abstract"
+        };
+    }
+    | DEF postfix "=" defBody {
+        $$ = util.mkDefinition($2, $4);;
+    }
+    | DEF postfix "(" ")" "=" defBody {
+        $$ = util.mkDefinition($2, {kind: "Lambda", params: [], body: $6});
+    }
     | DEF postfix "(" paramList ")" "=" defBody { $$ = {}; }
     | ID ID "\n" globalStatements END {
         $$ = {
@@ -90,8 +101,22 @@ statements
 
 statement
     : globalStatement { $$ = $1; }
-    | IF expr then statements ELSE statements END "\n" { $$ = {}; }
-    | IF expr then statements END "\n" { $$ = {}; }
+    | IF expr then statements ELSE statements END "\n" {
+        $$ = {
+            kind: "IfStatement",
+            condition: $2,
+            thenCase: $4,
+            elseCase: $6
+        };
+    }
+    | IF expr then statements END "\n" {
+        $$ = {
+            kind: "IfStatement",
+            condition: $2,
+            thenCase: $4,
+            elseCase: []
+        };
+    }
     | expr "\n" { $$ = $1; }
     ;
 
