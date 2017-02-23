@@ -67,7 +67,7 @@ globalStatement
             rhs: {kind: "Lambda", params: [], body: $5}
         };
     }
-    | postfix "(" paramList ")" "=" defBody { $$ = {}; }
+    | postfix "(" paramList ")" "=" defBody { $$ = "TODO"; }
     // TODO: Optionally allow types for non-abstract defs as well
     | DEF ID ":" ID {
         $$ = {
@@ -83,7 +83,7 @@ globalStatement
     | DEF postfix "(" ")" "=" defBody {
         $$ = util.mkDefinition($2, {kind: "Lambda", params: [], body: $6});
     }
-    | DEF postfix "(" paramList ")" "=" defBody { $$ = {}; }
+    | DEF postfix "(" paramList ")" "=" defBody { $$ = "TODO"; }
     | ID ID "\n" globalStatements END {
         $$ = {
             kind: "Assignment",
@@ -141,15 +141,15 @@ defBody
     ;
 
 expr
-    : expr "+" mult { $$ = {}; }
-    | expr "-" mult { $$ = {}; }
+    : expr "+" mult { $$ = "TODO"; }
+    | expr "-" mult { $$ = "TODO"; }
     | mult { $$ = $1; }
     ;
 
 mult
-    : mult "*" funCall { $$ = {}; }
-    | mult "/" funCall { $$ = {}; }
-    | mult "%" funCall { $$ = {}; }
+    : mult "*" funCall { $$ = "TODO"; }
+    | mult "/" funCall { $$ = "TODO"; }
+    | mult "%" funCall { $$ = "TODO"; }
     | funCall { $$ = $1; }
     ;
 
@@ -161,13 +161,13 @@ funCall
 
 postfix
     : funCall "." ID { $$ = {kind: "MemberAccess", receiver: $1, memberName: $3}; }
-    | funCall "[" expr "]" { $$ = {}; }
+    | funCall "[" expr "]" { $$ = "TODO"; }
     | prefix { $$ = $1; }
     ;
 
 prefix
-    : "+" prefix { $$ = {}; }
-    | "-" prefix { $$ = {}; }
+    : "+" prefix { $$ = "TODO"; }
+    | "-" prefix { $$ = "TODO"; }
     | primary { $$ = $1; }
     ;
 
