@@ -6,7 +6,7 @@
   "main": "js/main.js",
   "scripts": {
     "clean": "rm -rvf js",
-    "jison": "mkdir -p js && jison -o js/parser.js src/jison/IffyPiffy.jison",
+    "jison": "mkdirp js && jison -o js/parser.js src/jison/IffyPiffy.jison",
     "build": "npm run jison && tsc -p .",
     "run": "npm run build && node js/main.js"
   },
@@ -14,6 +14,7 @@
   "license": "GPL-3.0",
   "devDependencies": {
     "jison": "^0.4.17",
+    "mkdirp": "^0.5.1",
     "typescript": "^2.2.1"
   },
   "dependencies": {
