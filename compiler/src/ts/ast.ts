@@ -2,7 +2,7 @@ export interface Story {
     statements: TopLevelStatement[];
 }
 
-export type TopLevelStatement = Definition | Assignment;
+export type TopLevelStatement = Definition | Assignment | OnHandler;
 export type Statement = TopLevelStatement | IfStatement | Expression;
 
 export interface Definition {
@@ -16,6 +16,12 @@ export interface Assignment {
     kind: "Assignment";
     lhs: LExpression;
     rhs: Expression;
+}
+
+export interface OnHandler {
+    kind: "OnHandler";
+    event: Expression;
+    body: Statement[];
 }
 
 export interface IfStatement {

@@ -23,6 +23,7 @@
 "else"                  return 'ELSE';
 "end"                   return 'END';
 "def"                   return 'DEF';
+"on"                    return 'ON';
 "true"                  return 'TRUE';
 "false"                 return 'FALSE';
 [a-zA-Z_][a-zA-Z0-9_]*  return 'ID';
@@ -84,6 +85,7 @@ globalStatement
         $$ = util.mkDefinition($2, {kind: "Lambda", params: [], body: $6});
     }
     | DEF postfix "(" paramList ")" "=" defBody { $$ = "TODO"; }
+    | ON expr "\n" statements END { $$ = {kind: "OnHandler", event: $2, body: $4}; }
     | ID ID "\n" globalStatements END {
         $$ = {
             kind: "Assignment",
