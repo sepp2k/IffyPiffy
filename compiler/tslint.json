@@ -51,7 +51,6 @@
             "check-operator",
             "check-separator",
             "check-type"
-        ],
-        "no-switch-case-fall-through": true
+        ]
     }
 }
