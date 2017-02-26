@@ -21,11 +21,13 @@ Item Chair
 end
 
 Chair chair1
+    name = "Malte's chair"
     chairType = "Malte-Chair"
     description = "The back of the chair has broken off"
 end
 
 Chair chair2
+    name = "Sexy's chair"
     chairType = "ISP-Chair"
     description = "Another chair"
 end
