@@ -1,3 +1,3 @@
-import * as ast from './ast'
+import * as ast from "./ast";
 
-export declare var parser: { parse: (x: string) => ast.Story }
+export declare var parser: { parse: (x: string) => ast.Story; };

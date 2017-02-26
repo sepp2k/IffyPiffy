@@ -1,4 +1,4 @@
-import * as ast from './ast'
+import * as ast from "./ast";
 
 export function expToLExp(exp: ast.Expression): ast.LExpression {
     switch(exp.kind) {

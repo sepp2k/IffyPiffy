@@ -1,5 +1,5 @@
 export interface Story {
-    statements: TopLevelStatement[]
+    statements: TopLevelStatement[];
 }
 
 export type TopLevelStatement = Definition | Assignment;
@@ -59,14 +59,14 @@ export interface BoolLit {
 }
 
 export interface ArrayLit {
-    kind: "ArrayLit",
-    elements: Expression[]
+    kind: "ArrayLit";
+    elements: Expression[];
 }
 
 export interface ObjectLit {
-    kind: "ObjectLit",
-    parent: string,
-    body: TopLevelStatement[]
+    kind: "ObjectLit";
+    parent: string;
+    body: TopLevelStatement[];
 }
 
 export interface MemberAccess {
