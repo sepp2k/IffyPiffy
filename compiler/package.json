@@ -7,8 +7,8 @@
   "scripts": {
     "clean": "rm -rvf js",
     "jison": "mkdirp js && jison -o js/parser.js src/jison/IffyPiffy.jison",
-    "build": "npm run jison && tsc -p .",
-    "run": "npm run build && node js/main.js"
+    "compile": "npm run jison && tsc -p .",
+    "start": "npm run compile && node js/main.js"
   },
   "author": "Sebastian Hungerecker <sepp2k@googlemail.com>",
   "license": "GPL-3.0",
