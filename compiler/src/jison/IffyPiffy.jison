@@ -88,9 +88,10 @@ globalStatement
     | ON expr "\n" statements END { $$ = {kind: "OnHandler", event: $2, body: $4}; }
     | ID ID "\n" globalStatements END {
         $$ = {
-            kind: "Assignment",
-            lhs: {kind: "Variable", name: $2},
-            rhs: {kind: "Object", parent: $1, body: $4}
+            kind: "Definition",
+            object: null,
+            name: $2,
+            body: [{kind: "Object", parent: $1, body: $4}]
         };
     }
     | "\n" { $$ = null; }
