@@ -57,7 +57,7 @@ export function generateJS(story: ast.Story) {
         "        Object.defineProperty(exports, \"__esModule\", { value: true });\n" +
         "        let story = {};";
 
-    let say = "        function say(str) {story.latestMessage = \"\"}\n";
+    let say = "        function say(str) { story.latestMessage += str; }\n";
     let playSound = "        function playSound(soundFile) { /* TODO */ }\n";
     let moduleFooter =
         "        story.start =  function() { this.room = startingRoom; this.isFinished = false; };\n" +
