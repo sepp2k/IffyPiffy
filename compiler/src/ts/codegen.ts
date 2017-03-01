@@ -102,7 +102,9 @@ export function generateJS(story: ast.Story) {
                     env.set("syntax", { object: "this" });
                     env.set("defaultAction", { object: "this" });
                 }
-                return st.concat("{init: function() {", translateStatements(expr.body, "object"), " return this; } } . init()");
+                let result = st.concat("{init: function() {", translateStatements(expr.body, "object"), " return this; } } . init()");
+                env.popFrame();
+                return result;
 
             case "MemberAccess":
                 return st.concat(translateExpression(expr.receiver), ".", expr.memberName);
