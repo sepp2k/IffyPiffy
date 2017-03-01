@@ -1,3 +1,4 @@
+import "source-map-support/register";
 import * as fs from "fs";
 import {p} from "./util";
 import {parser} from "./parser";
