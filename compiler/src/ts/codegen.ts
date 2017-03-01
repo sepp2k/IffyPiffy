@@ -1,41 +1,19 @@
 import * as ast from "./ast";
 import * as st from "./string-tree";
+import { SymbolTable } from "./symbol-table";
 import { assertNever } from "./util";
 
 export function generateJS(story: ast.Story) {
     type Scope = "local" | "global" | { object: st.StringTree };
     type ScopeType = "local" | "global" | "object";
-    type Frame = { [name: string]: Scope | undefined };
-    let env: Frame[] = [{say: "global", playSound: "global", story: "global", startingRoom: "global"}];
-
-    function lookup(id: string): Scope|null {
-        for(let i = env.length - 1; i >= 0; i--) {
-            let result = env[i][id];
-            if(result) {
-                return result;
-            }
-        }
-        return null;
-    }
-
-    function defineVar(id: string, scope: Scope) {
-        env[env.length - 1][id] = scope;
-    }
-
-    function pushFrame() {
-        env.push({});
-    }
-
-    function popFrame() {
-        env.pop();
-    }
+    let env = new SymbolTable<Scope>({ say: "global", playSound: "global", story: "global", startingRoom: "global" });
 
     function fillScope(statements: ast.Statement[], scopeType: ScopeType) {
         let scope = scopeType === "object" ? {object: "this"} : scopeType;
         for(let statement of statements) {
             if (statement.kind === "Definition") {
                 if (statement.object === null) {
-                    defineVar(statement.name, scope);
+                    env.set(statement.name, scope);
                 } else {
                     console.log("TODO: Definitions on objects");
                 }
@@ -44,7 +22,7 @@ export function generateJS(story: ast.Story) {
     }
 
     function translateStatements(statements: ast.Statement[], scopeType: ScopeType): st.StringTree {
-        pushFrame();
+        env.pushFrame();
         fillScope(statements, scopeType);
         // Move object and functions defs to the beginning, so objects and functions
         // can be referenced before they're defined
@@ -56,7 +34,7 @@ export function generateJS(story: ast.Story) {
         let rest = statements.filter(stmnt => !isFunOrObjDef(stmnt));
         function trans(stmnt: ast.Statement) { return translateStatement(stmnt, scopeType); }
         let result = st.concat(...funAndObjDefs.map(trans), ...rest.map(trans));
-        popFrame();
+        env.popFrame();
         return result;
     }
 
@@ -101,7 +79,7 @@ export function generateJS(story: ast.Story) {
     function translateExpression(expr: ast.Expression): st.StringTree {
         switch (expr.kind) {
             case "Variable":
-                let scope = lookup(expr.name);
+                let scope = env.get(expr.name);
                 switch(scope) {
                     case "local":
                         return expr.name;
@@ -114,15 +92,15 @@ export function generateJS(story: ast.Story) {
                 }
 
             case "ObjectLit":
-                pushFrame();
+                env.pushFrame();
                 // TODO: Properly define variables based on parent
-                defineVar("name", { object: "this" });
-                defineVar("description", {object: "this"});
+                env.set("name", { object: "this" });
+                env.set("description", {object: "this"});
                 if(expr.parent === "Room") {
-                    defineVar("items", { object: "this" });
+                    env.set("items", { object: "this" });
                 } else if (expr.parent === "Verb") {
-                    defineVar("syntax", { object: "this" });
-                    defineVar("defaultAction", { object: "this" });
+                    env.set("syntax", { object: "this" });
+                    env.set("defaultAction", { object: "this" });
                 }
                 return st.concat("{init: function() {", translateStatements(expr.body, "object"), " return this; } } . init()");
 
