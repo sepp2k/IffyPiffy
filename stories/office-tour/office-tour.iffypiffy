@@ -45,7 +45,7 @@ end
 Verb touch
     syntax = "touch $Object"
 
-    defaulAction() =
+    defaultAction() =
         say("U can't touch this!")
         playSound("mchammer.mp3")
     end
