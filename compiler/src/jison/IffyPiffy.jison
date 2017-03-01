@@ -4,6 +4,7 @@
 %%
 [ \t\r]+                /* skip whitespace */
 \\[\n]                  /* skip line breaks escaped by backslashes */
+"//"[^\n]*              /* Skip comments */
 "*"                     return '*';
 "/"                     return '/';
 "%"                     return '%';
