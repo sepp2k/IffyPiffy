@@ -91,7 +91,7 @@ globalStatement
             kind: "Definition",
             object: null,
             name: $2,
-            body: [{kind: "Object", parent: $1, body: $4}]
+            body: [{kind: "ObjectLit", parent: $1, body: $4}]
         };
     }
     | "\n" { $$ = null; }
@@ -140,7 +140,7 @@ param
 
 defBody
     : "\n" statements END { $$ = $2; }
-    | expr "\n" { $$ = [$2]; }
+    | expr "\n" { $$ = [$1]; }
     ;
 
 expr
