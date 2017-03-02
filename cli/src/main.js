@@ -1,5 +1,6 @@
 var readline = require("readline");
-var story = require(process.argv[2]);
+var path = require("path");
+var story = require(path.resolve(process.argv[2]));
 
 var rl = readline.createInterface({
   input: process.stdin,
