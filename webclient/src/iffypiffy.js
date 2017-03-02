@@ -3,8 +3,6 @@
     define([], function() { return mod; });
   } else if (typeof exports === 'object') {
     module.exports = mod;
-  } else {
-    root.iffypiffy = mod;
   }
 })(this, (function() {
   function htmlify(message) {

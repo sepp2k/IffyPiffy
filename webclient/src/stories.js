@@ -1,0 +1,1 @@
+define([], () => ["echo", "quick-brown-fox", "office-tour"]);

@@ -6,25 +6,14 @@
     <link href="iffypiffy.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="https:////cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/2.1.0/jquery.scrollTo.min.js"></script>
+    <script data-main="main" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
 </head>
 <body>
   <h1>Iffy Piffy</h1>
-  <button id="echo">Echo</button> <button id="quick-brown-fox">Quick Brown Fox</button>
+  <div id="button-bar"></div>
   <h2 id="story-title"></h2>
   <div id="story">
   </div>
   <input id="input" type="text"></input>
 </body>
-<script src="iffypiffy.js"></script>
-<script src="../../stories/echo/echo.js"></script>
-<script src="../../stories/quick-brown-fox/quick-brown-fox.js"></script>
-<script>
-  $("#echo").click(function() {
-    iffypiffy.loadStory(echo);
-  });
-
-  $("#quick-brown-fox").click(function() {
-    iffypiffy.loadStory(quickBrownFox);
-  });
-</script>
 </html>
