@@ -1,12 +1,18 @@
 import * as ast from "./ast";
 import * as st from "./string-tree";
 import { SymbolTable } from "./symbol-table";
-import { assertNever } from "./util";
+import { assertNever, filterNulls } from "./util";
 
 export function generateJS(story: ast.Story) {
     type Scope = "local" | "global" | { object: st.StringTree };
     type ScopeType = "local" | "global" | "object";
     let env = new SymbolTable<Scope>({ say: "global", playSound: "global", story: "global", startingRoom: "global" });
+    let builtinObjects = {
+        "Item": ["name", "description"],
+        "Room": ["name", "description", "items"],
+        "Verb": ["syntax", "defaultAction"]
+    };
+    let objectEnv = new SymbolTable<string[]>(builtinObjects);
 
     function fillScope(statements: ast.Statement[], scopeType: ScopeType) {
         let scope = scopeType === "object" ? {object: "this"} : scopeType;
@@ -14,6 +20,17 @@ export function generateJS(story: ast.Story) {
             if (statement.kind === "Definition") {
                 if (statement.object === null) {
                     env.set(statement.name, scope);
+                    if(statement.body !== "abstract" && statement.body.length === 1) {
+                        let body = statement.body[0];
+                        if(body.kind === "ObjectLit") {
+                            let memberNames = body.body.map(stmnt => stmnt.kind === "Definition" ? stmnt.name : null);
+                            let parentMembers = objectEnv.get(body.parent);
+                            if (parentMembers === null) {
+                                throw new Error("Unknown object name: " + body.parent);
+                            }
+                            objectEnv.set(statement.name, filterNulls(memberNames).concat(parentMembers));
+                        }
+                    }
                 } else {
                     console.log("TODO: Definitions on objects");
                 }
@@ -23,6 +40,7 @@ export function generateJS(story: ast.Story) {
 
     function translateStatements(statements: ast.Statement[], scopeType: ScopeType): st.StringTree {
         env.pushFrame();
+        objectEnv.pushFrame();
         fillScope(statements, scopeType);
         // Move object and functions defs to the beginning, so objects and functions
         // can be referenced before they're defined
@@ -34,6 +52,7 @@ export function generateJS(story: ast.Story) {
         let rest = statements.filter(stmnt => !isFunOrObjDef(stmnt));
         function trans(stmnt: ast.Statement) { return translateStatement(stmnt, scopeType); }
         let result = st.concat(...funAndObjDefs.map(trans), ...rest.map(trans));
+        objectEnv.popFrame();
         env.popFrame();
         return result;
     }
@@ -47,14 +66,13 @@ export function generateJS(story: ast.Story) {
                         let last = translateStatement(statement.body[statement.body.length - 1], scopeType);
                         let rest = statement.body.slice(0, statement.body.length - 2);
                         let body = st.concat("(function() {", translateStatements(rest, "local"), "return", last, "})()");
-                        let result: st.StringTree;
                         switch(scopeType) {
                             case "local":
                                 return st.concat("let", statement.name, "=", body, ";\n");
                             case "global":
                                 return st.concat("$globals", ".", statement.name, "=", body, ";\n");
                             case "object":
-                                return st.concat(statement.name, ":", body, ",\n");
+                                return st.concat("this", ".", statement.name, "=", body, ";\n");
                             default:
                                 return assertNever(scopeType);
                         }
@@ -94,14 +112,13 @@ export function generateJS(story: ast.Story) {
 
             case "ObjectLit":
                 env.pushFrame();
-                // TODO: Properly define variables based on parent
-                env.set("name", { object: "this" });
-                env.set("description", {object: "this"});
-                if(expr.parent === "Room") {
-                    env.set("items", { object: "this" });
-                } else if (expr.parent === "Verb") {
-                    env.set("syntax", { object: "this" });
-                    env.set("defaultAction", { object: "this" });
+                let parentMembers = objectEnv.get(expr.parent);
+                if(parentMembers === null) {
+                    throw new Error("Unknown object name: " + expr.parent);
+                }
+                for(let member of parentMembers) {
+                    // TODO: Handle nested objects properly here
+                    env.set(member, {object: "this"});
                 }
                 // Objects are initialized when they're first accessed. This way we don't need to worry about
                 // changing the order of side effects by moving around object definitions.
