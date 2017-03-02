@@ -52,7 +52,7 @@ export function generateJS(story: ast.Story) {
                             case "local":
                                 return st.concat("let", statement.name, "=", body, ";\n");
                             case "global":
-                                return st.concat("iffypiffyGlobals", ".", statement.name, "=", body, ";\n");
+                                return st.concat("$globals", ".", statement.name, "=", body, ";\n");
                             case "object":
                                 return st.concat(statement.name, ":", body, ",\n");
                             default:
@@ -76,6 +76,7 @@ export function generateJS(story: ast.Story) {
                 return st.concat(translateExpression(statement), ";\n");
         }
     }
+
     function translateExpression(expr: ast.Expression): st.StringTree {
         switch (expr.kind) {
             case "Variable":
@@ -84,7 +85,7 @@ export function generateJS(story: ast.Story) {
                     case "local":
                         return expr.name;
                     case "global":
-                        return st.concat("iffypiffyGlobals", ".", expr.name);
+                        return st.concat("$globals", ".", expr.name);
                     case null:
                         throw Error("Undeclared variable: " + expr.name);
                     default:
@@ -129,15 +130,15 @@ export function generateJS(story: ast.Story) {
         "    })(function (require, story) {\n" +
         "        \"use strict\";\n" +
         "        Object.defineProperty(exports, \"__esModule\", { value: true });\n" +
-        "        let iffypiffyGlobals = { story: {} };\n";
+        "        let $globals = { story: {} };\n";
 
-    let say = "        iffypiffyGlobals.say = function(str) { story.latestMessage += str; }\n";
-    let playSound = "        iffypiffyGlobals.playSound = function(soundFile) { /* TODO */ }\n";
+    let say = "        $globals.say = function(str) { story.latestMessage += str; }\n";
+    let playSound = "        $globals.playSound = function(soundFile) { /* TODO */ }\n";
     let moduleFooter =
-        "        story.title = iffypiffyGlobals.story.title;\n" +
-        "        story.description = iffypiffyGlobals.story.description;\n" +
+        "        story.title = $globals.story.title;\n" +
+        "        story.description = $globals.story.description;\n" +
         "        story.start =  function() {\n" +
-        "            this.room = iffypiffyGlobals.startingRoom;\n" +
+        "            this.room = $globals.startingRoom;\n" +
         "            this.isFinished = false;\n" +
         "            this.latestMessage = this.room.description;\n" +
         "        };\n" +
