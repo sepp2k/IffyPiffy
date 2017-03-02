@@ -156,11 +156,11 @@ export function generateJS(story: ast.Story) {
         "            if (v !== undefined) module.exports = v;\n" +
         "        }\n" +
         "        else if (typeof define === \"function\" && define.amd) {\n" +
-        "            define([\"require\", \"exports\", \"./string-tree\"], factory);\n" +
+        "            define([\"require\", \"exports\"], factory);\n" +
         "        }\n" +
         "    })(function (require, story) {\n" +
         "        \"use strict\";\n" +
-        "        Object.defineProperty(exports, \"__esModule\", { value: true });\n" +
+        "        Object.defineProperty(story, \"__esModule\", { value: true });\n" +
         "        let $globals = { story: {} };\n";
 
     let say = "        $globals.say = function(str) { story.latestMessage += str; }\n";
