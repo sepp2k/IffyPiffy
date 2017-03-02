@@ -1,0 +1,18 @@
+{
+  "name": "iffypiffy",
+  "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "scripts": {
+    "postinstall": "npm --prefix compiler install",
+    "preclean": "npm --prefix compiler run clean",
+    "clean": "rm -vf stories/**/*.js stories/**/*.js.map",
+    "compiler": "npm --prefix compiler start",
+    "stories": "tsc -p stories && npm run compiler -- $PWD/stories/**/*.iffypiffy"
+  },
+  "author": "Sebastian Hungerecker <sepp2k@googlemail.com>",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "typescript": "^2.2.1"
+  }
+}

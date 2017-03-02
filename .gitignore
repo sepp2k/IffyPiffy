@@ -2,4 +2,5 @@
 .vscode/
 node_modules
 compiler/js/
-stories/office-tour/*.js
+stories/**/*.js
+stories/**/*.js.map
