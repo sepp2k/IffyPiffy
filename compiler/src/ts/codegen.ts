@@ -103,12 +103,15 @@ export function generateJS(story: ast.Story) {
                     env.set("syntax", { object: "this" });
                     env.set("defaultAction", { object: "this" });
                 }
-                let result = st.concat("{init: function() {", translateStatements(expr.body, "object"), " return this; } } . init()");
+                // Objects are initialized when they're first accessed. This way we don't need to worry about
+                // changing the order of side effects by moving around object definitions.
+                let result = st.concat("{$init: function() {", translateStatements(expr.body, "object"), " this.$needsInit = false; return this; }, $needsInit: true }");
                 env.popFrame();
                 return result;
 
             case "MemberAccess":
-                return st.concat(translateExpression(expr.receiver), ".", expr.memberName);
+                let obj = translateExpression(expr.receiver);
+                return st.concat("(", obj, "&&", obj, ".", "$needsInit", "?", obj, ".", "$init()", ":", obj, ")", ".", expr.memberName);
 
             case "StringLit":
                 return "\"" + expr.value + "\"";
@@ -138,7 +141,7 @@ export function generateJS(story: ast.Story) {
         "        story.title = $globals.story.title;\n" +
         "        story.description = $globals.story.description;\n" +
         "        story.start =  function() {\n" +
-        "            this.room = $globals.startingRoom;\n" +
+        "            this.room = $globals.startingRoom.$needsInit ? $globals.startingRoom.$init() : $globals.startingRoom;\n" +
         "            this.isFinished = false;\n" +
         "            this.latestMessage = this.room.description;\n" +
         "        };\n" +
