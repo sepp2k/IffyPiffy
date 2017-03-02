@@ -13,6 +13,7 @@ export function generateJS(story: ast.Story) {
         "Verb": ["syntax", "defaultAction"]
     };
     let objectEnv = new SymbolTable<string[]>(builtinObjects);
+    let objectId = 0;
 
     function fillScope(statements: ast.Statement[], scopeType: ScopeType) {
         let scope = scopeType === "object" ? {object: "this"} : scopeType;
@@ -116,13 +117,23 @@ export function generateJS(story: ast.Story) {
                 if(parentMembers === null) {
                     throw new Error("Unknown object name: " + expr.parent);
                 }
+                let objectName = "object" + objectId++;
                 for(let member of parentMembers) {
-                    // TODO: Handle nested objects properly here
-                    env.set(member, {object: "this"});
+                    env.set(member, {object: objectName});
                 }
-                // Objects are initialized when they're first accessed. This way we don't need to worry about
-                // changing the order of side effects by moving around object definitions.
-                let result = st.concat("{$init: function() {", translateStatements(expr.body, "object"), " this.$needsInit = false; return this; }, $needsInit: true }");
+                let result = st.concat(
+                    "(function() {\n",
+                    "let", objectName, "=", "{\n",
+                    // Objects are initialized when they're first accessed. This way we don't need to worry about
+                    // changing the order of side effects by moving around object definitions.
+                    "$init: function() {\n",
+                    translateStatements(expr.body, "object"),
+                    "this.$needsInit = false;\n",
+                    "return this;\n},",
+                    "$needsInit: true\n};\n",
+                    "return", objectName, ";\n",
+                    "})()"
+                    );
                 env.popFrame();
                 return result;
 

@@ -24,6 +24,10 @@ Chair chair1
     name = "Malte's chair"
     chairType = "Malte-Chair"
     description = "The back of the chair has broken off"
+
+    Item headRest
+        name = chairType
+    end
 end
 
 Chair chair2
