@@ -132,6 +132,10 @@ export function generateJS(story: ast.Story) {
             case "StringLit":
                 return "\"" + expr.value + "\"";
 
+            case "ArrayLit":
+                let elements = expr.elements.map(translateExpression);
+                return st.concat("[", st.join(elements, ","), "]");
+
             default:
                 return st.concat("/* TODO: Codegen for:", expr.kind, "*/ undefined");
         }
