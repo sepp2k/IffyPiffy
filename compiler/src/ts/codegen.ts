@@ -177,7 +177,7 @@ export function generateJS(story: ast.Story) {
         "            this.latestMessage = \"\";\n" +
         "            enterRoom(this.room);\n" +
         "        };\n" +
-        "        story.input =  function(command) { this.latestMessage = \"\"; /* TODO */ };\n" +
+        "        story.input =  function(command) { if(command === \"quit\") { this.isFinished = true; } this.latestMessage = \"\"; /* TODO */ };\n" +
         "});\n";
     let js = st.concat(moduleHeader, translateStatements(story.statements, "global"), moduleFooter);
     return st.toString(js);
