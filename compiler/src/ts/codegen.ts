@@ -127,7 +127,7 @@ export function generateJS(story: ast.Story) {
 
             case "MemberAccess":
                 let obj = translateExpression(expr.receiver);
-                return st.concat("(", obj, "&&", obj, ".", "$needsInit", "?", obj, ".", "$init()", ":", obj, ")", ".", expr.memberName);
+                return st.concat("$init(", obj, ")", ".", expr.memberName);
 
             case "StringLit":
                 return "\"" + expr.value + "\"";
@@ -153,20 +153,32 @@ export function generateJS(story: ast.Story) {
         "    })(function (require, story) {\n" +
         "        \"use strict\";\n" +
         "        Object.defineProperty(story, \"__esModule\", { value: true });\n" +
-        "        let $globals = { story: {} };\n";
+        "        let $globals = { story: {} };\n" +
+        "        $globals.say = function(str) { story.latestMessage += str; }\n" +
+        "        $globals.playSound = function(soundFile) { /* TODO */ }\n" +
+        "        function $init(obj) { return obj && obj.$needsInit ? obj.$init() : obj; }" +
+        "        function enterRoom(room) {\n" +
+        "            story.latestMessage += $init(room).description;\n" +
+        "            if(room.items && room.items.length > 0) {\n" +
+        "                story.latestMessage += \"\\n\\nYou see here:\\n\";\n" +
+        "                for(let i = 0; i < room.items.length - 1; i++) {\n" +
+        "                    story.latestMessage += $init(room.items[i]).name + \", \";\n" +
+        "                }\n" +
+        "                story.latestMessage += \"and \" + $init(room.items[room.items.length - 1]).name + \".\";\n" +
+        "            }\n" +
+        "        }\n";
 
-    let say = "        $globals.say = function(str) { story.latestMessage += str; }\n";
-    let playSound = "        $globals.playSound = function(soundFile) { /* TODO */ }\n";
     let moduleFooter =
         "        story.title = $globals.story.title;\n" +
         "        story.description = $globals.story.description;\n" +
         "        story.start =  function() {\n" +
-        "            this.room = $globals.startingRoom.$needsInit ? $globals.startingRoom.$init() : $globals.startingRoom;\n" +
+        "            this.room = $init($globals.startingRoom);\n" +
         "            this.isFinished = false;\n" +
-        "            this.latestMessage = this.room.description;\n" +
+        "            this.latestMessage = \"\";\n" +
+        "            enterRoom(this.room);\n" +
         "        };\n" +
         "        story.input =  function(command) { this.latestMessage = \"\"; /* TODO */ };\n" +
         "});\n";
-    let js = st.concat(moduleHeader, say, playSound, translateStatements(story.statements, "global"), moduleFooter);
+    let js = st.concat(moduleHeader, translateStatements(story.statements, "global"), moduleFooter);
     return st.toString(js);
 }
