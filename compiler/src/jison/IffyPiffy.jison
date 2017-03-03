@@ -16,7 +16,6 @@
 "]"                     return ']';
 ","                     return ',';
 "."                     return '.';
-":"                     return ':';
 "="                     return '=';
 [\n]                    return '\n';
 "if"                    return 'IF';
@@ -24,9 +23,11 @@
 "else"                  return 'ELSE';
 "end"                   return 'END';
 "def"                   return 'DEF';
+"override"              return 'OVERRIDE';
 "on"                    return 'ON';
 "true"                  return 'TRUE';
 "false"                 return 'FALSE';
+"abstract"              return 'ABSTRACT';
 [a-zA-Z_][a-zA-Z0-9_]*  return 'ID';
 [0-9]+("."[0-9]+)?      return 'NUMBER';
 \"(\\.|[^"])*\"         return 'STRING';
@@ -57,46 +58,42 @@ globalStatements
 
 globalStatement
     // We allow arbitrary expressions as the lhs, but really we only want to
-    // accept variables, object members and array slots. Other kinds of expressions
-    // will be rejected later.
-    // We allow a parameter list after the lhs, so we can assign a function by
-    // writing f(x) = body.
+    // accept variables, object members and array slots. For other kinds of
+    // expressions expToLExp will cause an error.
     : postfix "=" expr "\n" { $$ = {kind: "Assignment", lhs: util.expToLExp($1), rhs: $3}; }
-    | postfix "(" ")" "=" defBody {
-        $$ = {
-            kind: "Assignment",
-            lhs: util.expToLExp($1),
-            rhs: {kind: "Lambda", params: [], body: $5}
-        };
-    }
-    | postfix "(" paramList ")" "=" defBody { $$ = "TODO"; }
-    // TODO: Optionally allow types for non-abstract defs as well
-    | DEF ID ":" ID {
+    | def ID "=" exprOrAbstract "\n" {
         $$ = {
             kind: "Definition",
-            object: null,
             name: $2,
-            body: "abstract"
+            body: $4
         };
     }
-    | DEF postfix "=" defBody {
-        $$ = util.mkDefinition($2, $4);;
+    | def ID "(" ")" defBody {
+        $$ = {
+            kind: "Definition",
+            name: $2,
+            body: {kind: "Lambda", params: [], body: $5}
+        };
     }
-    | DEF postfix "(" ")" "=" defBody {
-        $$ = util.mkDefinition($2, {kind: "Lambda", params: [], body: $6});
+    | def ID "(" paramList ")" defBody {
+        $$ = {
+            kind: "Definition",
+            name: $2,
+            body: {kind: "Lambda", params: $4, body: $6}
+        };
     }
-    | DEF postfix "(" paramList ")" "=" defBody { $$ = "TODO"; }
     | ON expr "\n" statements END { $$ = {kind: "OnHandler", event: $2, body: $4}; }
     | ID ID "\n" globalStatements END {
         $$ = {
             kind: "Definition",
-            object: null,
             name: $2,
-            body: [{kind: "ObjectLit", parent: $1, body: $4}]
+            body: {kind: "ObjectLit", parent: $1, body: $4}
         };
     }
     | "\n" { $$ = null; }
     ;
+
+def : DEF | OVERRIDE ;
 
 statements
     : statements statement { $$ = $1; $$.push($2); }
@@ -131,17 +128,18 @@ then
     ;
 
 paramList
-    : paramList "," param { $1.push($3); $$ = $1; }
-    | param { $$ = [$1]; }
-    ;
-
-param
-    : ID ":" ID { $$ = {name: $0, type: $2}; }
+    : paramList "," ID { $1.push($3); $$ = $1; }
+    | ID { $$ = [$1]; }
     ;
 
 defBody
     : "\n" statements END { $$ = $2; }
-    | expr "\n" { $$ = [$1]; }
+    | "=" exprOrAbstract "\n" { $$ = [$2]; }
+    ;
+
+exprOrAbstract
+    : expr { $$ = $1; }
+    | ABSTRACT { $$ = "abstract"; }
     ;
 
 expr

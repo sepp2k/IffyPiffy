@@ -17,23 +17,17 @@ export function generateJS(story: ast.Story) {
 
     function fillScope(statements: ast.Statement[], scopeType: ScopeType) {
         let scope = scopeType === "object" ? {object: "this"} : scopeType;
-        for(let statement of statements) {
+        for (let statement of statements) {
             if (statement.kind === "Definition") {
-                if (statement.object === null) {
-                    env.set(statement.name, scope);
-                    if(statement.body !== "abstract" && statement.body.length === 1) {
-                        let body = statement.body[0];
-                        if(body.kind === "ObjectLit") {
-                            let memberNames = body.body.map(stmnt => stmnt.kind === "Definition" ? stmnt.name : null);
-                            let parentMembers = objectEnv.get(body.parent);
-                            if (parentMembers === null) {
-                                throw new Error("Unknown object name: " + body.parent);
-                            }
-                            objectEnv.set(statement.name, filterNulls(memberNames).concat(parentMembers));
-                        }
+                env.set(statement.name, scope);
+                let body = statement.body;
+                if (body !== "abstract" && body.kind === "ObjectLit") {
+                    let memberNames = body.body.map(stmnt => stmnt.kind === "Definition" ? stmnt.name : null);
+                    let parentMembers = objectEnv.get(body.parent);
+                    if (parentMembers === null) {
+                        throw new Error("Unknown object name: " + body.parent);
                     }
-                } else {
-                    console.log("TODO: Definitions on objects");
+                    objectEnv.set(statement.name, filterNulls(memberNames).concat(parentMembers));
                 }
             }
         }
@@ -46,8 +40,8 @@ export function generateJS(story: ast.Story) {
         // Move object and functions defs to the beginning, so objects and functions
         // can be referenced before they're defined
         function isFunOrObjDef(stmnt: ast.Statement) {
-            return stmnt.kind === "Definition" && stmnt.body !== "abstract" && stmnt.body.length === 1 &&
-                (stmnt.body[0].kind === "Lambda" || stmnt.body[0].kind === "ObjectLit");
+            return stmnt.kind === "Definition" && stmnt.body !== "abstract" &&
+                (stmnt.body.kind === "Lambda" || stmnt.body.kind === "ObjectLit");
         }
         let funAndObjDefs = statements.filter(isFunOrObjDef);
         let rest = statements.filter(stmnt => !isFunOrObjDef(stmnt));
@@ -62,26 +56,20 @@ export function generateJS(story: ast.Story) {
         switch (statement.kind) {
             case "Definition":
                 // Don't generate any code for abstract definitions - they only matter for scope
-                if (statement.body !== "abstract") {
-                    if(statement.object === null) {
-                        let last = translateStatement(statement.body[statement.body.length - 1], scopeType);
-                        let rest = statement.body.slice(0, statement.body.length - 2);
-                        let body = st.concat("(function() {", translateStatements(rest, "local"), "return", last, "})()");
-                        switch(scopeType) {
-                            case "local":
-                                return st.concat("let", statement.name, "=", body, ";\n");
-                            case "global":
-                                return st.concat("$globals", ".", statement.name, "=", body, ";\n");
-                            case "object":
-                                return st.concat("this", ".", statement.name, "=", body, ";\n");
-                            default:
-                                return assertNever(scopeType);
-                        }
-                    } else {
-                        return "/* TODO: Definitions on objects */;\n";
-                    }
-                } else {
+                if (statement.body === "abstract") {
                     return st.empty();
+                } else {
+                    let body = translateExpression(statement.body);
+                    switch (scopeType) {
+                        case "local":
+                            return st.concat("let", statement.name, "=", body, ";\n");
+                        case "global":
+                            return st.concat("$globals", ".", statement.name, "=", body, ";\n");
+                        case "object":
+                            return st.concat("this", ".", statement.name, "=", body, ";\n");
+                        default:
+                            return assertNever(scopeType);
+                    }
                 }
 
             case "Assignment":

@@ -7,9 +7,8 @@ export type Statement = TopLevelStatement | IfStatement | Expression;
 
 export interface Definition {
     kind: "Definition";
-    object: LExpression|null;
     name: string;
-    body: Statement[]|"abstract";
+    body: Expression|"abstract";
 }
 
 export interface Assignment {
