@@ -4,11 +4,12 @@
   "private": true,
   "description": "",
   "scripts": {
-    "postinstall": "npm --prefix compiler install",
+    "postinstall": "cd compiler && npm install",
     "preclean": "npm --prefix compiler run clean",
     "clean": "rm -vf stories/**/*.js stories/**/*.js.map",
     "compiler": "npm --prefix compiler start",
-    "stories": "tsc -p stories && npm run compiler -- $PWD/stories/**/*.iffypiffy"
+    "prestories": "tsc -p stories",
+    "stories": "bash -c 'npm run compiler -- $PWD/stories/**/*.iffypiffy'"
   },
   "author": "Sebastian Hungerecker <sepp2k@googlemail.com>",
   "license": "GPL-3.0",
