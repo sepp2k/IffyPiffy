@@ -61,39 +61,42 @@ globalStatement
     // accept variables, object members and array slots. For other kinds of
     // expressions expToLExp will cause an error.
     : postfix "=" expr "\n" { $$ = {kind: "Assignment", lhs: util.expToLExp($1), rhs: $3}; }
-    | def ID "=" exprOrAbstract "\n" {
+    | DEF ID "=" exprOrAbstract "\n" {
         $$ = {
-            kind: "Definition",
+            kind: "VariableDefinition",
             name: $2,
             body: $4
         };
     }
-    | def ID "(" ")" defBody {
+    | DEF ID "(" paramList ")" defBody {
         $$ = {
-            kind: "Definition",
+            kind: "FunctionDefinition",
+            isOverride: false,
             name: $2,
-            body: {kind: "Lambda", params: [], body: $5}
+            params: $4,
+            body: $6
         };
     }
-    | def ID "(" paramList ")" defBody {
+    | OVERRIDE ID "(" paramList ")" defBody {
         $$ = {
-            kind: "Definition",
+            kind: "FunctionDefinition",
+            isOverride: true,
             name: $2,
-            body: {kind: "Lambda", params: $4, body: $6}
+            params: $4,
+            body: $6
         };
     }
     | ON expr "\n" statements END { $$ = {kind: "OnHandler", event: $2, body: $4}; }
     | ID ID "\n" globalStatements END {
         $$ = {
-            kind: "Definition",
+            kind: "ObjectDefinition",
             name: $2,
-            body: {kind: "ObjectLit", parent: $1, body: $4}
+            body: $4,
+            parent: $1
         };
     }
     | "\n" { $$ = null; }
     ;
-
-def : DEF | OVERRIDE ;
 
 statements
     : statements statement { $$ = $1; $$.push($2); }
@@ -130,6 +133,7 @@ then
 paramList
     : paramList "," ID { $1.push($3); $$ = $1; }
     | ID { $$ = [$1]; }
+    | { $$ = []; }
     ;
 
 defBody

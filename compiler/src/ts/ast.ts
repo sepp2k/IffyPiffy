@@ -2,14 +2,30 @@ export interface Story {
     statements: TopLevelStatement[];
 }
 
-export type TopLevelStatement = Definition | Assignment | OnHandler;
+export type TopLevelStatement = VariableDefinition | FunctionDefinition | ObjectDefinition | Assignment | OnHandler;
 export type Statement = TopLevelStatement | IfStatement | Expression;
 
-export interface Definition {
-    kind: "Definition";
+export interface VariableDefinition {
+    kind: "VariableDefinition";
     name: string;
     body: Expression|"abstract";
 }
+
+export interface FunctionDefinition {
+    kind: "FunctionDefinition";
+    name: string;
+    isOverride: boolean;
+    params: string[];
+    body: Statement[] | "abstract";
+}
+
+export interface ObjectDefinition {
+    kind: "ObjectDefinition";
+    name: string;
+    parent: string;
+    body: TopLevelStatement[];
+}
+
 
 export interface Assignment {
     kind: "Assignment";
@@ -37,11 +53,9 @@ export type Expression =
     | NumberLit
     | BoolLit
     | ArrayLit
-    | ObjectLit
     | MemberAccess
     | ArrayAccess
-    | FunctionCall
-    | Lambda;
+    | FunctionCall;
 
 export interface Variable {
     kind: "Variable";
@@ -66,12 +80,6 @@ export interface BoolLit {
 export interface ArrayLit {
     kind: "ArrayLit";
     elements: Expression[];
-}
-
-export interface ObjectLit {
-    kind: "ObjectLit";
-    parent: string;
-    body: TopLevelStatement[];
 }
 
 export interface MemberAccess {
@@ -102,10 +110,4 @@ export interface FunctionCall {
     kind: "FunctionCall";
     func: Expression;
     arguments: Expression[];
-}
-
-export interface Lambda {
-    kind: "Lambda";
-    params: string[];
-    body: Statement[];
 }

@@ -1,9 +1,9 @@
-type Frame<T> = { [name: string]: T | undefined };
+import { StringMap } from "./util";
 
 export class SymbolTable<T> {
-    frames: Frame<T>[];
+    frames: StringMap<T>[];
 
-    constructor(startFrame: Frame<T>|null = null) {
+    constructor(startFrame: StringMap<T>|null = null) {
         this.frames = startFrame ? [startFrame] : [];
     }
 
@@ -21,7 +21,7 @@ export class SymbolTable<T> {
         this.frames[this.frames.length - 1][id] = value;
     }
 
-    pushFrame(frame: Frame<T> = {}) {
+    pushFrame(frame: StringMap<T> = {}) {
         this.frames.push(frame);
     }
 

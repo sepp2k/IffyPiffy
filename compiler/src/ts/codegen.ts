@@ -1,82 +1,151 @@
 import * as ast from "./ast";
 import * as st from "./string-tree";
 import { SymbolTable } from "./symbol-table";
-import { assertNever, filterNulls } from "./util";
+import { assertNever, filterNulls, StringMap, mergeMaps, p } from "./util";
 
 export function generateJS(story: ast.Story) {
-    type Scope = "local" | "global" | { object: st.StringTree };
-    type ScopeType = "local" | "global" | "object";
-    let env = new SymbolTable<Scope>({ say: "global", playSound: "global", story: "global", startingRoom: "global" });
-    let builtinObjects = {
-        "Item": ["name", "description"],
-        "Room": ["name", "description", "items"],
-        "Verb": ["syntax", "defaultAction"]
-    };
-    let objectEnv = new SymbolTable<string[]>(builtinObjects);
-    let objectId = 0;
+    type Scope = "local" | { object: st.StringTree };
+    type EnvEntry = VarEntry | ObjectEntry;
+    type VarEntry = {qid: st.StringTree, kind: "VarEntry"};
+    type ObjectEntry = {qid: st.StringTree, kind: "ObjectEntry", members: StringMap<EnvEntry>};
+    let env = new SymbolTable<EnvEntry>({
+        say: {kind: "VarEntry", qid: "$globals.say"},
+        playSound: {kind: "VarEntry", qid: "$globals.playSound"},
+        startingRoom: {kind: "VarEntry", qid: "$globals.startingRoom"},
+        story: {kind: "ObjectEntry", qid: "$globals.story", members: {
+            title: {kind: "VarEntry", qid: "title"},
+            description: {kind: "VarEntry", qid: "description"}
+        }},
+        Item: {kind: "ObjectEntry", qid: "$globals.Item", members: {
+            name: {kind: "VarEntry", qid: "name"},
+            description: {kind: "VarEntry", qid: "description"}
+        }},
+        Room: {kind: "ObjectEntry", qid: "$globals.Room", members: {
+            name: {kind: "VarEntry", qid: "name"},
+            description: {kind: "VarEntry", qid: "description"},
+            items: {kind: "VarEntry", qid: "items"}
+        }},
+        Verb: {kind: "ObjectEntry", qid: "$globals.Verb", members: {
+            syntax: {kind: "VarEntry", qid: "syntax"},
+            defaultAction: {kind: "VarEntry", qid: "defaultAction"},
+        }},
+    });
+    function mkQID(name: string, scope: Scope): st.StringTree {
+        if(scope === "local") {
+            return name;
+        } else {
+            return st.concat(scope.object, ".", name);
+        }
+    }
 
-    function fillScope(statements: ast.Statement[], scopeType: ScopeType) {
-        let scope = scopeType === "object" ? {object: "this"} : scopeType;
+    function findMemberDefs(statements: ast.TopLevelStatement[]): StringMap<EnvEntry> {
+        let result: StringMap<EnvEntry> = {};
+        for(let statement of statements) {
+            switch(statement.kind) {
+                case "VariableDefinition":
+                    result[statement.name] = { kind: "VarEntry", qid: statement.name };
+                    break;
+            }
+        }
+        return result;
+    }
+
+    function fillScope(statements: ast.Statement[], scope: Scope): void {
         for (let statement of statements) {
-            if (statement.kind === "Definition") {
-                env.set(statement.name, scope);
-                let body = statement.body;
-                if (body !== "abstract" && body.kind === "ObjectLit") {
-                    let memberNames = body.body.map(stmnt => stmnt.kind === "Definition" ? stmnt.name : null);
-                    let parentMembers = objectEnv.get(body.parent);
-                    if (parentMembers === null) {
-                        throw new Error("Unknown object name: " + body.parent);
+            switch (statement.kind) {
+                case "VariableDefinition":
+                case "FunctionDefinition": {
+                    if(statement.kind === "FunctionDefinition" && statement.isOverride) continue;
+                    let qid = mkQID(statement.name, scope);
+                    env.set(statement.name, { kind: "VarEntry", qid: qid });
+                    break;
+                }
+                case "ObjectDefinition": {
+                    let qid = mkQID(statement.name, scope);
+                    let parent = env.get(statement.parent);
+                    if (parent === null || parent.kind !== "ObjectEntry") {
+                        throw new Error("Unknown object name: " + statement.parent);
                     }
-                    objectEnv.set(statement.name, filterNulls(memberNames).concat(parentMembers));
+                    let members = mergeMaps(parent.members, findMemberDefs(statement.body));
+                    env.set(statement.name, { kind: "ObjectEntry", qid: qid, members: members });
                 }
             }
         }
     }
 
-    function translateStatements(statements: ast.Statement[], scopeType: ScopeType): st.StringTree {
+    function translateStatements(statements: ast.Statement[], scope: Scope): st.StringTree {
         env.pushFrame();
-        objectEnv.pushFrame();
-        fillScope(statements, scopeType);
+        fillScope(statements, scope);
         // Move object and functions defs to the beginning, so objects and functions
         // can be referenced before they're defined
         function isFunOrObjDef(stmnt: ast.Statement) {
-            return stmnt.kind === "Definition" && stmnt.body !== "abstract" &&
-                (stmnt.body.kind === "Lambda" || stmnt.body.kind === "ObjectLit");
+            return stmnt.kind === "FunctionDefinition" || stmnt.kind === "ObjectDefinition";
         }
         let funAndObjDefs = statements.filter(isFunOrObjDef);
         let rest = statements.filter(stmnt => !isFunOrObjDef(stmnt));
-        function trans(stmnt: ast.Statement) { return translateStatement(stmnt, scopeType); }
+        function trans(stmnt: ast.Statement) { return translateStatement(stmnt, scope); }
         let result = st.concat(...funAndObjDefs.map(trans), ...rest.map(trans));
-        objectEnv.popFrame();
         env.popFrame();
         return result;
     }
 
-    function translateStatement(statement: ast.Statement, scopeType: ScopeType): st.StringTree {
+    function translateDef(def: ast.VariableDefinition | ast.FunctionDefinition | ast.ObjectDefinition, scope: Scope) {
+        // fillScope should have already processed this and stored the name in the env
+        let entry = env.get(def.name);
+        if (entry === null) throw new Error("Internal Error: Missing env entry");
+        let qid = entry.qid;
+        if (scope === "local") {
+            if(qid !== def.name) throw new Error("Internal Error: Local variables should not be assigned a qualified ID.");
+            return [qid, st.concat("let", qid, "=")];
+        } else {
+            return [qid, st.concat(qid, "=")];
+        }
+    }
+
+    function translateStatement(statement: ast.Statement, scope: Scope): st.StringTree {
         switch (statement.kind) {
-            case "Definition":
+            case "VariableDefinition": {
+                let [_name, defHeader] = translateDef(statement, scope);
                 // Don't generate any code for abstract definitions - they only matter for scope
                 if (statement.body === "abstract") {
                     return st.empty();
                 } else {
                     let body = translateExpression(statement.body);
-                    switch (scopeType) {
-                        case "local":
-                            return st.concat("let", statement.name, "=", body, ";\n");
-                        case "global":
-                            return st.concat("$globals", ".", statement.name, "=", body, ";\n");
-                        case "object":
-                            return st.concat("this", ".", statement.name, "=", body, ";\n");
-                        default:
-                            return assertNever(scopeType);
-                    }
+                    return st.concat(defHeader, body, ";\n");
                 }
+            }
+            case "ObjectDefinition": {
+                let [name, defHeader] = translateDef(statement, scope);
 
+                env.pushFrame();
+                let parent = env.get(statement.parent);
+                if(parent === null || parent.kind !== "ObjectEntry") {
+                    throw new Error("Unknown object name: " + statement.parent);
+                }
+                for(let member in parent.members) {
+                    let entry = parent.members[member] as EnvEntry;
+                    let newEntry = {qid: st.concat(name, ".", entry.qid)};
+                    env.set(member, Object.assign({}, entry, newEntry));
+                }
+                let result = st.concat(
+                    defHeader, "$inherit(", parent.qid, ", {\n",
+                    // Objects are initialized when they're first accessed. This way we don't need to worry about
+                    // changing the order of side effects by moving around object definitions.
+                    "$init: function() {\n",
+                    translateStatements(statement.body, {object: name}),
+                    "this.$needsInit = false;\n",
+                    "return this;\n},\n",
+                    "$needsInit: true\n});\n"
+                    );
+                env.popFrame();
+                return result;
+            }
             case "Assignment":
                 return st.concat(translateExpression(statement.lhs), "=", translateExpression(statement.rhs), ";\n");
 
             case "OnHandler":
             case "IfStatement":
+            case "FunctionDefinition":
                 return st.concat("/* TODO: Codegen for:", statement.kind, "*/\n");
 
             default:
@@ -87,43 +156,12 @@ export function generateJS(story: ast.Story) {
     function translateExpression(expr: ast.Expression): st.StringTree {
         switch (expr.kind) {
             case "Variable":
-                let scope = env.get(expr.name);
-                switch(scope) {
-                    case "local":
-                        return expr.name;
-                    case "global":
-                        return st.concat("$globals", ".", expr.name);
-                    case null:
-                        throw Error("Undeclared variable: " + expr.name);
-                    default:
-                        return st.concat(scope.object, ".", expr.name);
+                let entry = env.get(expr.name);
+                if(entry === null) {
+                    throw Error("Undeclared variable: " + expr.name);
+                } else {
+                    return entry.qid;
                 }
-
-            case "ObjectLit":
-                env.pushFrame();
-                let parentMembers = objectEnv.get(expr.parent);
-                if(parentMembers === null) {
-                    throw new Error("Unknown object name: " + expr.parent);
-                }
-                let objectName = "object" + objectId++;
-                for(let member of parentMembers) {
-                    env.set(member, {object: objectName});
-                }
-                let result = st.concat(
-                    "(function() {\n",
-                    "let", objectName, "=", "{\n",
-                    // Objects are initialized when they're first accessed. This way we don't need to worry about
-                    // changing the order of side effects by moving around object definitions.
-                    "$init: function() {\n",
-                    translateStatements(expr.body, "object"),
-                    "this.$needsInit = false;\n",
-                    "return this;\n},",
-                    "$needsInit: true\n};\n",
-                    "return", objectName, ";\n",
-                    "})()"
-                    );
-                env.popFrame();
-                return result;
 
             case "MemberAccess":
                 let obj = translateExpression(expr.receiver);
@@ -156,7 +194,11 @@ export function generateJS(story: ast.Story) {
         "        let $globals = { story: {} };\n" +
         "        $globals.say = function(str) { story.latestMessage += str; }\n" +
         "        $globals.playSound = function(soundFile) { /* TODO */ }\n" +
-        "        function $init(obj) { return obj && obj.$needsInit ? obj.$init() : obj; }" +
+        "        $globals.Item = {};\n" +
+        "        $globals.Room = {};\n" +
+        "        $globals.Verb = {};\n" +
+        "        function $init(obj) { return obj && obj.$needsInit ? obj.$init() : obj; }\n" +
+        "        function $inherit(parent, child) { return Object.assign(Object.create(parent), child); }\n" +
         "        function enterRoom(room) {\n" +
         "            story.latestMessage += $init(room).description;\n" +
         "            if(room.items && room.items.length > 0) {\n" +
@@ -179,6 +221,6 @@ export function generateJS(story: ast.Story) {
         "        };\n" +
         "        story.input =  function(command) { if(command === \"quit\") { this.isFinished = true; } this.latestMessage = \"\"; /* TODO */ };\n" +
         "});\n";
-    let js = st.concat(moduleHeader, translateStatements(story.statements, "global"), moduleFooter);
+    let js = st.concat(moduleHeader, translateStatements(story.statements, {object: "$globals"}), moduleFooter);
     return st.toString(js);
 }
