@@ -105,7 +105,7 @@ export function generateJS(story: ast.Story) {
     function translateStatement(statement: ast.Statement, scope: Scope): st.StringTree {
         switch (statement.kind) {
             case "VariableDefinition": {
-                let [_name, defHeader] = translateDef(statement, scope);
+                let [_qid, defHeader] = translateDef(statement, scope);
                 // Don't generate any code for abstract definitions - they only matter for scope
                 if (statement.body === "abstract") {
                     return st.empty();
@@ -115,7 +115,7 @@ export function generateJS(story: ast.Story) {
                 }
             }
             case "ObjectDefinition": {
-                let [name, defHeader] = translateDef(statement, scope);
+                let [qid, defHeader] = translateDef(statement, scope);
 
                 env.pushFrame();
                 let parent = env.get(statement.parent);
@@ -124,7 +124,7 @@ export function generateJS(story: ast.Story) {
                 }
                 for(let member in parent.members) {
                     let entry = parent.members[member] as EnvEntry;
-                    let newEntry = {qid: st.concat(name, ".", entry.qid)};
+                    let newEntry = {qid: st.concat(qid, ".", entry.qid)};
                     env.set(member, Object.assign({}, entry, newEntry));
                 }
                 let result = st.concat(
@@ -132,7 +132,7 @@ export function generateJS(story: ast.Story) {
                     // Objects are initialized when they're first accessed. This way we don't need to worry about
                     // changing the order of side effects by moving around object definitions.
                     "$init: function() {\n",
-                    translateStatements(statement.body, {object: name}),
+                    translateStatements(statement.body, {object: qid}),
                     "this.$needsInit = false;\n",
                     "return this;\n},\n",
                     "$needsInit: true\n});\n"
@@ -140,12 +140,31 @@ export function generateJS(story: ast.Story) {
                 env.popFrame();
                 return result;
             }
+
+            case "FunctionDefinition": {
+                let [qid, defHeader] = translateDef(statement, scope);
+                let body;
+                if(statement.body === "abstract") {
+                    body = "throw new Error(\"Unimplemented abstract method: \"" + statement.name + "\")";
+                } else {
+                    env.pushFrame();
+                    for(let param of statement.params) {
+                        env.set(param, {kind: "VarEntry", qid: param});
+                    }
+                    body = translateStatements(statement.body, "local");
+                    env.popFrame();
+                }
+                if(statement.isOverride) {
+                    defHeader = st.concat(qid, "=");
+                }
+                return st.concat(defHeader, "function (", st.join(statement.params, ","), ") {\n", body, "};\n");
+            }
+
             case "Assignment":
                 return st.concat(translateExpression(statement.lhs), "=", translateExpression(statement.rhs), ";\n");
 
             case "OnHandler":
             case "IfStatement":
-            case "FunctionDefinition":
                 return st.concat("/* TODO: Codegen for:", statement.kind, "*/\n");
 
             default:
