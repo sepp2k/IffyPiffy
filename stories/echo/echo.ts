@@ -9,7 +9,7 @@ export function start() {
 }
 
 export function input(command: string) {
-    if (command == "quit") {
+    if (command === "quit") {
         isFinished = true;
         latestMessage = "Quitting";
     } else {
