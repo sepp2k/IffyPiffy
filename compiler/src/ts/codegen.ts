@@ -193,7 +193,7 @@ export function generateJS(story: ast.Story) {
         "        Object.defineProperty(story, \"__esModule\", { value: true });\n" +
         "        let $globals = { story: {} };\n" +
         "        $globals.say = function(str) { story.latestMessage += str; }\n" +
-        "        $globals.playSound = function(soundFile) { /* TODO */ }\n" +
+        "        $globals.playSound = function(soundFile) { if(Audio) new Audio(story.resourceDir + \"/\" + soundFile).play(); }\n" +
         "        $globals.Item = {};\n" +
         "        $globals.Room = {};\n" +
         "        $globals.Verb = {};\n" +
@@ -213,10 +213,11 @@ export function generateJS(story: ast.Story) {
     let moduleFooter =
         "        story.title = $globals.story.title;\n" +
         "        story.description = $globals.story.description;\n" +
-        "        story.start =  function() {\n" +
+        "        story.start =  function(resourceDir = \".\") {\n" +
         "            this.room = $init($globals.startingRoom);\n" +
         "            this.isFinished = false;\n" +
         "            this.latestMessage = \"\";\n" +
+        "            this.resourceDir = resourceDir;\n" +
         "            enterRoom(this.room);\n" +
         "        };\n" +
         "        story.input =  function(command) { if(command === \"quit\") { this.isFinished = true; } this.latestMessage = \"\"; /* TODO */ };\n" +

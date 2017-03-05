@@ -14,14 +14,14 @@
   var latestOutput = null;
   var latestInput = null;
   return {
-    loadStory: function(story) {
+    loadStory: function(story, resourceDir) {
       outputArea.text("");
       inputArea.val("");
       outputArea.show();
       inputArea.show();
       inputArea.focus();
       this.story = story;
-      story.start();
+      story.start(resourceDir);
       this.executeStep();
       title.text(story.title);
       var iffy = this;
