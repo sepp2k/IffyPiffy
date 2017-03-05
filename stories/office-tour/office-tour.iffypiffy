@@ -37,7 +37,7 @@ Chair chair2
 end
 
 Item laptop
-    name = "Malte's laptop"
+    name = "a laptop"
     def hasBeenTouched = false
     description = "It's about to lift off (quality Apple tech)"
 

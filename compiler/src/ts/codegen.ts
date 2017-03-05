@@ -170,7 +170,13 @@ export function generateJS(story: ast.Story) {
                 return st.concat("if", "(", condition, ") {\n", thenCase, "} else {\n", elseCase, "}\n");
 
             case "OnHandler":
-                return st.concat("/* TODO: Codegen for:", statement.kind, "*/\n");
+                let body = translateStatements(statement.body, "local");
+                let nameEntry = env.get("name");
+                if(nameEntry === null) {
+                    throw new Error("On-handlers can only be defined on objects with a 'name' property.");
+                }
+                let event = translateExpression(statement.event);
+                return st.concat("$onHandlers.push([", event, ",", nameEntry.qid, ", function () {", body, "}]);\n");
 
             default:
                 return st.concat(translateExpression(statement), ";\n");
@@ -228,13 +234,19 @@ export function generateJS(story: ast.Story) {
         "        \"use strict\";\n" +
         "        Object.defineProperty(story, \"__esModule\", { value: true });\n" +
         "        let $globals = { story: {} };\n" +
-        "        $globals.say = function(str) { story.latestMessage += str; }\n" +
+        "        $globals.say = function(...strs) { story.latestMessage += strs.join(\"\") + \"\\n\"; }\n" +
         "        $globals.playSound = function(soundFile) { if(Audio) new Audio(story.resourceDir + \"/\" + soundFile).play(); }\n" +
         "        $globals.Item = {};\n" +
         "        $globals.Room = {};\n" +
-        "        $globals.Verb = {};\n" +
+        "        $globals.Verb = { $onInherit: function(child) { $verbs.push(child); } };\n" +
+        "        let $onHandlers = [];\n" +
+        "        let $verbs = [];\n" +
         "        function $init(obj) { return obj && obj.$needsInit ? obj.$init() : obj; }\n" +
-        "        function $inherit(parent, child) { return Object.assign(Object.create(parent), child); }\n" +
+        "        function $inherit(parent, childProps) {\n" +
+        "            let child = Object.assign(Object.create(parent), childProps);\n" +
+        "            if(parent.$onInherit) parent.$onInherit(child);\n" +
+        "            return child;" +
+        "        }\n" +
         "        function enterRoom(room) {\n" +
         "            story.latestMessage += $init(room).description;\n" +
         "            if(room.items && room.items.length > 0) {\n" +
@@ -247,6 +259,7 @@ export function generateJS(story: ast.Story) {
         "        }\n";
 
     let moduleFooter =
+        "        function simplifyObject(obj) { return obj.replace(/\\s*\\b(the|a|an)\\b\\s*/, \"\"); }\n" +
         "        story.title = $globals.story.title;\n" +
         "        story.description = $globals.story.description;\n" +
         "        story.start =  function(resourceDir = \".\") {\n" +
@@ -256,7 +269,23 @@ export function generateJS(story: ast.Story) {
         "            this.resourceDir = resourceDir;\n" +
         "            enterRoom(this.room);\n" +
         "        };\n" +
-        "        story.input =  function(command) { if(command === \"quit\") { this.isFinished = true; } this.latestMessage = \"\"; /* TODO */ };\n" +
+        "        story.input =  function(command) {\n" +
+        "            if(command === \"quit\") this.isFinished = true;\n" +
+        "            this.latestMessage = \"\";\n" +
+        "            let tokens = command.split(/\\s+/);\n" +
+        "            if(tokens.length >= 2) {\n" +
+        "                let [verb, ...object] = tokens;\n" +
+        "                object = simplifyObject(object.join(\" \"));\n" +
+        "                for(let [handlerVerb, handlerObject, handler] of $onHandlers) {\n" +
+        "                    handlerObject = simplifyObject(handlerObject);\n" +
+        "                    if($init(handlerVerb).syntax.split(/\\s+/)[0] === verb && handlerObject === object) { handler(); return; }\n" +
+        "                }\n" +
+        "            }\n" +
+        "            for(let verb of $verbs) {\n" +
+        "                if($init(verb).syntax.split(/\\s+/)[0] === tokens[0]) { verb.defaultAction(); return; }\n" +
+        "            }\n" +
+        "            $globals.say(\"I'm sorry, but I could not understand you.\");\n" +
+        "        };\n" +
         "});\n";
     let js = st.concat(moduleHeader, translateStatements(story.statements, {object: "$globals"}), moduleFooter);
     return st.toString(js);
