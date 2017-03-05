@@ -138,7 +138,8 @@ paramList
 
 defBody
     : "\n" statements END { $$ = $2; }
-    | "=" exprOrAbstract "\n" { $$ = [$2]; }
+    | "=" expr "\n" { $$ = [$2]; }
+    | "=" ABSTRACT "\n" { $$ = "abstract"; }
     ;
 
 exprOrAbstract
