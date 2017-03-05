@@ -235,7 +235,7 @@ export function generateJS(story: ast.Story) {
         "        Object.defineProperty(story, \"__esModule\", { value: true });\n" +
         "        let $globals = { story: {} };\n" +
         "        $globals.say = function(...strs) { story.latestMessage += strs.join(\"\") + \"\\n\"; }\n" +
-        "        $globals.playSound = function(soundFile) { if(Audio) new Audio(story.resourceDir + \"/\" + soundFile).play(); }\n" +
+        "        $globals.playSound = function(soundFile) { if(typeof Audio !== \"undefined\") new Audio(story.resourceDir + \"/\" + soundFile).play(); }\n" +
         "        $globals.Item = {};\n" +
         "        $globals.Room = {};\n" +
         "        $globals.Verb = { $onInherit: function(child) { $verbs.push(child); } };\n" +
