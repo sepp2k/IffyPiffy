@@ -154,21 +154,16 @@ expr
     ;
 
 mult
-    : mult "*" funCall { $$ = "TODO"; }
-    | mult "/" funCall { $$ = "TODO"; }
-    | mult "%" funCall { $$ = "TODO"; }
-    | funCall { $$ = $1; }
-    ;
-
-funCall
-    : postfix "(" ")" { $$ = {kind: "FunctionCall", func: $1, arguments: []}; }
-    | postfix "(" exprList ")" { $$ = {kind: "FunctionCall", func: $1, arguments: $3}; }
+    : mult "*" postfix { $$ = "TODO"; }
+    | mult "/" postfix { $$ = "TODO"; }
+    | mult "%" postfix { $$ = "TODO"; }
     | postfix { $$ = $1; }
     ;
 
 postfix
-    : funCall "." ID { $$ = {kind: "MemberAccess", receiver: $1, memberName: $3}; }
-    | funCall "[" expr "]" { $$ = "TODO"; }
+    : prefix "(" exprList ")" { $$ = {kind: "FunctionCall", func: $1, arguments: $3}; }
+    | prefix "." ID { $$ = {kind: "MemberAccess", receiver: $1, memberName: $3}; }
+    | prefix "[" expr "]" { $$ = {kind: "ArrayAccess", receiver: $1, indexExpression: $3}; }
     | prefix { $$ = $1; }
     ;
 
@@ -191,4 +186,5 @@ primary
 exprList
     : exprList "," expr { $1.push($3); $$ = $1; }
     | expr { $$ = [$1]; }
+    | { $$ = []; }
     ;
