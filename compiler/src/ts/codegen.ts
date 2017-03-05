@@ -163,8 +163,13 @@ export function generateJS(story: ast.Story) {
             case "Assignment":
                 return st.concat(translateExpression(statement.lhs), "=", translateExpression(statement.rhs), ";\n");
 
-            case "OnHandler":
             case "IfStatement":
+                let condition = translateExpression(statement.condition);
+                let thenCase = translateStatements(statement.thenCase, scope);
+                let elseCase = translateStatements(statement.elseCase, scope);
+                return st.concat("if", "(", condition, ") {\n", thenCase, "} else {\n", elseCase, "}\n");
+
+            case "OnHandler":
                 return st.concat("/* TODO: Codegen for:", statement.kind, "*/\n");
 
             default:
