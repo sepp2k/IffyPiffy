@@ -10,7 +10,8 @@ export function concat(...trees: StringTree[]) {
     return {children: trees};
 }
 
-export function join(trees: StringTree[], separator: string) {
+export function join(trees: StringTree[], separator: string): StringTree {
+    if(trees.length === 0) return "";
     let children = [];
     for(let i = 0; i < trees.length - 1; i++) {
         children.push(trees[i]);
