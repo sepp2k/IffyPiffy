@@ -270,7 +270,7 @@ export function generateJS(story: ast.Story) {
         "            enterRoom(this.room);\n" +
         "        };\n" +
         "        story.input =  function(command) {\n" +
-        "            if(command === \"quit\") this.isFinished = true;\n" +
+        "            if(command === \"quit\") { this.isFinished = true; return; }\n" +
         "            this.latestMessage = \"\";\n" +
         "            let tokens = command.split(/\\s+/);\n" +
         "            if(tokens.length >= 2) {\n" +
