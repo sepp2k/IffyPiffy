@@ -187,10 +187,15 @@ export function generateJS(story: ast.Story) {
                     return entry.qid;
                 }
 
-            case "MemberAccess":
+            case "MemberAccess": {
                 let obj = translateExpression(expr.receiver);
                 return st.concat("$init(", obj, ")", ".", expr.memberName);
-
+            }
+            case "ArrayAccess": {
+                let obj = translateExpression(expr.receiver);
+                let index = translateExpression(expr.indexExpression);
+                return st.concat(obj, "[", index, "]");
+            }
             case "StringLit":
                 return "\"" + expr.value + "\"";
 
@@ -198,8 +203,15 @@ export function generateJS(story: ast.Story) {
                 let elements = expr.elements.map(translateExpression);
                 return st.concat("[", st.join(elements, ","), "]");
 
-            default:
-                return st.concat("/* TODO: Codegen for:", expr.kind, "*/ undefined");
+            case "BoolLit":
+            case "NumberLit":
+                return "" + expr.value;
+
+            case "FunctionCall": {
+                let f = translateExpression(expr.func);
+                let args = expr.arguments.map(translateExpression)
+                return st.concat(f, "(", st.join(args, ","), ")");
+            }
         }
     }
 
