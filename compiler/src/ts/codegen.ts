@@ -259,7 +259,7 @@ export function generateJS(story: ast.Story) {
         "        }\n";
 
     let moduleFooter =
-        "        function simplifyObject(obj) { return obj.replace(/\\s*\\b(the|a|an)\\b\\s*/, \"\"); }\n" +
+        "        function simplifyObject(obj) { return obj.replace(/\\s*\\b(the|a|an)\\b\\s*/, \"\").toLowerCase(); }\n" +
         "        story.title = $globals.story.title;\n" +
         "        story.description = $globals.story.description;\n" +
         "        story.start =  function(resourceDir = \".\") {\n" +
