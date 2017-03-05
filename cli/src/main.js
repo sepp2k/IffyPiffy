@@ -1,6 +1,9 @@
 var readline = require("readline");
 var path = require("path");
+var runtime = require("../../runtime/runtime");
 var story = require(path.resolve(process.argv[2]));
+
+if(typeof story === "function") story = story(runtime);
 
 var rl = readline.createInterface({
   input: process.stdin,

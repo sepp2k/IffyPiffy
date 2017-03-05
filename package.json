@@ -7,6 +7,8 @@
     "postinstall": "cd compiler && npm install",
     "preclean": "npm --prefix compiler run clean",
     "clean": "rm -vf stories/**/*.js stories/**/*.js.map",
+    "runtime": "tsc -p runtime",
+    "precompiler": "npm run runtime",
     "compiler": "npm --prefix compiler start",
     "prestories": "tsc -p stories",
     "stories": "bash -c 'npm run compiler -- $PWD/stories/**/*.iffypiffy'"

@@ -4,3 +4,5 @@ node_modules
 compiler/js/
 stories/**/*.js
 stories/**/*.js.map
+runtime/**/*.js
+runtime/**/*.js.map
