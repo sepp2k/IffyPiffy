@@ -99,8 +99,8 @@ globalStatement
     ;
 
 statements
-    : statements statement { $$ = $1; $$.push($2); }
-    | statement { $$ = [$1]; }
+    : statements statement { $$ = $1; if($2 !== null) $$.push($2); }
+    | statement { $$ = $1 === null ? [] : [$1]; }
     ;
 
 statement
