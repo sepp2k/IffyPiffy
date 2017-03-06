@@ -11,6 +11,7 @@ define(["stories", "iffypiffy", "../../runtime/runtime"], function (storyNames, 
                     iffypiffy.loadStory(story, dir);
                 });
                 button.text(story.title);
+                button.attr("title", story.description);
                 $("#button-bar").append(button);
             }
         });
