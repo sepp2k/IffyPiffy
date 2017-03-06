@@ -32,6 +32,9 @@
 [0-9]+("."[0-9]+)?      return 'NUMBER';
 \"(\\.|[^"])*\"         return 'STRING';
 <<EOF>>                 return 'EOF';
+"#title"                return 'TITLE';
+"#description"          return 'DESCRIPTION';
+"#"[a-zA-Z0-9_]*        return 'INVALID_METADATA';
 .                       return 'INVALID';
 /lex
 %{
@@ -43,8 +46,8 @@
 %%
 
 story
-    : globalStatements EOF {
-        return {statements: $1.filter(s => s !== null)};
+    : TITLE STRING "\n"+ DESCRIPTION STRING "\n"+ globalStatements EOF {
+        return {title: $2, description: $5, statements: $7};
     }
     | EOF {
         return [];

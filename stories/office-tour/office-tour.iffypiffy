@@ -1,5 +1,6 @@
-story.title = "Office Tour"
-story.description = "A virtual tour through our office"
+#title "Office Tour"
+#description "A virtual tour through our office"
+
 startingRoom = ourOffice
 
 Room ourOffice

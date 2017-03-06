@@ -231,10 +231,11 @@ export function generateJS(story: ast.Story) {
         "    }\n" +
         "})(function (require) {\n" +
         "    \"use strict\";\n" +
-        "    return function ($rt) {\n";
+        "    return function ($rt) {\n" +
+        "        return new $rt.Story( " + story.title + ", " + story.description  + "," + "function() {\n";
 
     let moduleFooter =
-        "        return new $rt.Story();" +
+        "        });" +
         "    };\n" +
         "});\n";
     let js = st.concat(moduleHeader, translateStatements(story.statements, "local"), moduleFooter);

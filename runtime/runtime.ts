@@ -21,8 +21,6 @@ interface IffyPiffyItem extends IffyPiffyObject {
 
 export namespace globals {
 
-    export let story: { description?: string, title?: string } = {};
-
     export let startingRoom: IffyPiffyRoom;
 
     export function say(...strs: string[]) {
@@ -81,15 +79,23 @@ function simplifyObject(obj: string) {
 }
 
 export class Story {
-    title = globals.story.title;
-    description = globals.story.description;
+    title: string;
+    description: string;
     room: IffyPiffyRoom;
     isFinished: boolean;
     latestMessage: string;
+    initializer: () => void;
+
+    constructor(title: string, description: string, initializer: () => void) {
+        this.title = title;
+        this.description = description;
+        this.initializer = initializer;
+    }
 
     start(_resourceDir = ".") {
-        this.room = init(globals.startingRoom);
         this.isFinished = false;
+        this.initializer();
+        this.room = init(globals.startingRoom);
         latestMessage = "";
         resourceDir = _resourceDir;
         enterRoom(this.room);
