@@ -1,6 +1,6 @@
 interface IffyPiffyObject {
     $init(): this;
-    $needsInit(): boolean;
+    $needsInit: boolean;
     $onInherit?(child: IffyPiffyObject): void;
 }
 
@@ -9,15 +9,21 @@ interface IffyPiffyVerb extends IffyPiffyObject {
     defaultAction(): void;
 }
 
-interface IffyPiffyRoom extends IffyPiffyObject {
+interface IffyPiffyThing extends IffyPiffyObject {
+    name: string;
+    description: string;
+}
+
+interface IffyPiffyRoom extends IffyPiffyThing {
     description: string;
     items: IffyPiffyItem[];
 }
 
-interface IffyPiffyItem extends IffyPiffyObject {
-    name: string;
-    description: string;
+interface IffyPiffyItem extends IffyPiffyThing {
 }
+
+let verbs: IffyPiffyVerb[] = [];
+let things: IffyPiffyThing[] = [];
 
 export namespace globals {
 
@@ -33,15 +39,25 @@ export namespace globals {
         }
     }
 
-    export let Item = {};
+    export let Object = { $init() {} } as IffyPiffyObject;
 
-    export let Room = {};
+    export let Thing = inherit(Object, {
+        $onInherit: function (child: IffyPiffyThing) {
+            things.push(child);
+        }
+    });
 
-    export let Verb = {
+    export let Item = inherit(Thing, {});
+
+    export let Room = inherit(Thing, {
+        $init() { this.items = []; }
+    });
+
+    export let Verb = inherit(Object, {
         $onInherit: function (child: IffyPiffyVerb) {
             verbs.push(child);
         }
-    };
+    });
 }
 
 function enterRoom(room: IffyPiffyRoom) {
@@ -60,8 +76,6 @@ let latestMessage: string = "";
 let resourceDir = ".";
 
 export let onHandlers: [IffyPiffyVerb, string, () => void][] = [];
-
-export let verbs: IffyPiffyVerb[] = [];
 
 export function init<T extends IffyPiffyObject>(obj: T): T {
     return obj && obj.$needsInit ? obj.$init() : obj;
