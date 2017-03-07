@@ -215,7 +215,7 @@ export function generateJS(story: ast.Story) {
 
             case "FunctionCall": {
                 let f = translateExpression(expr.func);
-                let args = expr.arguments.map(translateExpression)
+                let args = expr.arguments.map(translateExpression);
                 return st.concat(f, "(", st.join(args, ","), ")");
             }
         }
