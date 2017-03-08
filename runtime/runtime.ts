@@ -6,7 +6,7 @@ interface IffyPiffyObject {
 }
 
 interface IffyPiffyVerb extends IffyPiffyObject {
-    syntax: string;
+    syntax: (string|IffyPiffyThing)[];
     defaultAction(): void;
 }
 
@@ -72,14 +72,14 @@ export namespace globals {
     };
 
     export let examine = inherit(Verb, "examine", function () {
-        this.syntax = "examine $Item";
+        this.syntax = ["examine", Item];
         this.defaultAction = function () {
             say("You don't see that anywhere.");
         };
     });
 
     export let quit = inherit(Verb, "quit", function () {
-        this.syntax = "quit";
+        this.syntax = ["quit"];
         this.defaultAction = function () {
             say("Goodbye!");
             isFinished = true;
@@ -172,14 +172,14 @@ export class Story {
             for (let [handlerVerb, handlerObject, handler] of onHandlers) {
                 if(handlerObject.name === undefined) continue;
                 let handlerObjectName = simplifyObject(handlerObject.name);
-                if (init(handlerVerb).syntax.split(/\s+/)[0] === verb && handlerObjectName === objectName) {
+                if (init(handlerVerb).syntax[0] === verb && handlerObjectName === objectName) {
                     handler.call(handlerObject);
                     return;
                 }
             }
         }
         for (let verb of verbs) {
-            if (init(verb).syntax.split(/\s+/)[0] === tokens[0]) {
+            if (init(verb).syntax[0] === tokens[0]) {
                 verb.defaultAction();
                 return;
             }

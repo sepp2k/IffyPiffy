@@ -52,7 +52,7 @@ Item laptop
 end
 
 Verb touch
-    syntax = "touch $Thing"
+    syntax = ["touch", Thing]
 
     override defaultAction()
         say("U can't touch this!")
