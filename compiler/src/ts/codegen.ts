@@ -43,7 +43,6 @@ export function generateJS(story: ast.Story) {
             case "Namespace":
                 return st.concat(scope.namespace, ".", name);
             case "This":
-                console.log(name, nesting, scope.nesting, nesting - scope.nesting);
                 let qid: st.StringTree = "this";
                 for(let i = 0; i < nesting - scope.nesting; i++) {
                     qid = st.concat(qid, ".$outer");
