@@ -1,3 +1,4 @@
+require("source-map-support/register");
 var readline = require("readline");
 var path = require("path");
 var runtime = require("../../runtime/runtime");

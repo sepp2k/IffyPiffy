@@ -13,7 +13,7 @@
   "author": "Sebastian Hungerecker <sepp2k@googlemail.com>",
   "license": "GPL-3.0",
   "dependencies": {
-    "source-map-support": "^0.4.8"
+    "source-map-support": "^0.4.11"
   },
   "devDependencies": {
     "jison": "^0.4.17",
