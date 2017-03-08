@@ -82,7 +82,14 @@ let resourceDir = ".";
 export let onHandlers: [IffyPiffyVerb, IffyPiffyThing, () => void][] = [];
 
 export function init<T extends IffyPiffyObject>(obj: T): T {
-    return obj && obj.$needsInit ? obj.$init() : obj;
+    if (typeof obj === "object" && obj.$needsInit) {
+        obj.$init();
+        for (let member in obj) {
+            // I can't be arsed to make the types work here
+            init(obj[member] as any);
+        }
+    }
+    return obj;
 }
 
 export function inherit(parent: IffyPiffyObject, objectName: string, initializer: () => void) {
@@ -132,7 +139,7 @@ export class Story {
     }
 
     private handleInput(command: string) {
-                if (command === "quit") {
+        if (command === "quit") {
             this.isFinished = true;
             return;
         }
