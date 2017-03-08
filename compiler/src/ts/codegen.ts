@@ -128,14 +128,12 @@ export function generateJS(story: ast.Story) {
                     env.set(member, Object.assign({}, entry, newEntry));
                 }
                 let result = st.concat(
-                    defHeader, "$rt.inherit(", parent.qid, ", {\n",
+                    defHeader, "$rt.inherit(", parent.qid, ",", "\"" + statement.name + "\"", ",",
                     // Objects are initialized when they're first accessed. This way we don't need to worry about
                     // changing the order of side effects by moving around object definitions.
-                    "$init: function() {\n",
+                    "function () {\n",
                     translateStatements(statement.body, {object: qid}),
-                    "this.$needsInit = false;\n",
-                    "return this;\n},\n",
-                    "$needsInit: true\n});\n"
+                    "});\n"
                     );
                 env.popFrame();
                 return result;

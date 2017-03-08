@@ -1,6 +1,7 @@
 interface IffyPiffyObject {
     $init(): this;
     $needsInit: boolean;
+    $objectName: string;
     $onInherit?(child: IffyPiffyObject): void;
 }
 
@@ -39,25 +40,28 @@ export namespace globals {
         }
     }
 
-    export let Object = { $init() {} } as IffyPiffyObject;
+    export let Object = {
+        $init() {
+            this.$needsInit = false;
+        },
+        $objectName: "Object"
+    } as IffyPiffyObject;
 
-    export let Thing = inherit(Object, {
-        $onInherit: function (child: IffyPiffyThing) {
-            things.push(child);
-        }
+    export let Thing = inherit(Object, "Thing", function () {});
+    Thing.$onInherit = function (child: IffyPiffyThing) {
+        things.push(child);
+    };
+
+    export let Item = inherit(Thing, "Item", function () {});
+
+    export let Room = inherit(Thing, "Room", function () {
+        this.items = [];
     });
 
-    export let Item = inherit(Thing, {});
-
-    export let Room = inherit(Thing, {
-        $init() { this.items = []; }
-    });
-
-    export let Verb = inherit(Object, {
-        $onInherit: function (child: IffyPiffyVerb) {
-            verbs.push(child);
-        }
-    });
+    export let Verb = inherit(Object, "Verb", function () {});
+    Verb.$onInherit = function (child: IffyPiffyVerb) {
+        verbs.push(child);
+    };
 }
 
 function enterRoom(room: IffyPiffyRoom) {
@@ -81,9 +85,20 @@ export function init<T extends IffyPiffyObject>(obj: T): T {
     return obj && obj.$needsInit ? obj.$init() : obj;
 }
 
-export function inherit(parent: IffyPiffyObject, childProps: {}) {
-    let child = Object.assign(Object.create(parent), childProps);
-    if (parent.$onInherit) parent.$onInherit(child);
+export function inherit(parent: IffyPiffyObject, objectName: string, initializer: () => void) {
+    let child = Object.create(parent);
+    child.$parent = parent;
+    child.$needsInit = true;
+    child.$objectName = objectName;
+    child.$init = function () {
+        parent.$init.call(this);
+        initializer.call(this);
+        return this;
+    };
+    // Only built-in objects have a custom $onInherit handler, so any other object simply
+    // inherits the one from its parent.
+    child.$onInherit = parent.$onInherit;
+    if(parent.$onInherit) parent.$onInherit(child);
     return child;
 }
 
@@ -127,6 +142,7 @@ export class Story {
             let [verb, ...objectParts] = tokens;
             let object = simplifyObject(objectParts.join(" "));
             for (let [handlerVerb, handlerObject, handler] of onHandlers) {
+                if(handlerObject === undefined) continue;
                 handlerObject = simplifyObject(handlerObject);
                 if (init(handlerVerb).syntax.split(/\s+/)[0] === verb && handlerObject === object) {
                     handler();
