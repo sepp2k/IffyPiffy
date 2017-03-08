@@ -22,6 +22,10 @@ export function generateJS(story: ast.Story) {
             title: {kind: "VarEntry", scope: {kind: "This", nesting: 0}},
             description: {kind: "VarEntry", scope: {kind: "This", nesting: 0}
         }}},
+        Thing: {kind: "ObjectEntry", scope: {kind: "Namespace", namespace: "$rt.globals"}, members: {
+            name: {kind: "VarEntry", scope: {kind: "This", nesting: 0}},
+            description: {kind: "VarEntry", scope: {kind: "This", nesting: 0}
+        }}},
         Item: {kind: "ObjectEntry", scope: {kind: "Namespace", namespace: "$rt.globals"}, members: {
             name: {kind: "VarEntry", scope: {kind: "This", nesting: 0}},
             description: {kind: "VarEntry", scope: {kind: "This", nesting: 0}
