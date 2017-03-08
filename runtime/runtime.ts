@@ -51,7 +51,11 @@ export namespace globals {
         $objectName: "Object"
     } as IffyPiffyObject;
 
-    export let Thing = inherit(Object, "Thing", function () {});
+    export let Thing = inherit(Object, "Thing", function () {
+        onHandlers.push([examine, this, function() {
+            say(init(this).description);
+        }]);
+    });
     Thing.$onInherit = function (child: IffyPiffyThing) {
         things.push(child);
     };
@@ -66,6 +70,13 @@ export namespace globals {
     Verb.$onInherit = function (child: IffyPiffyVerb) {
         verbs.push(child);
     };
+
+    export let examine = inherit(Verb, "examine", function () {
+        this.syntax = "examine $Item";
+        this.defaultAction = function () {
+            say("You don't see that anywhere.");
+        };
+    });
 }
 
 function enterRoom(room: IffyPiffyRoom) {
