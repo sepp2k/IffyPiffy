@@ -124,15 +124,14 @@ export function generateJS(story: ast.Story) {
                 }
                 for(let member in parent.members) {
                     let entry = parent.members[member] as EnvEntry;
-                    let newEntry = {qid: st.concat(qid, ".", entry.qid)};
-                    env.set(member, Object.assign({}, entry, newEntry));
+                    env.set(member, Object.assign({}, entry, { qid: st.concat("this.", entry.qid) }));
                 }
                 let result = st.concat(
                     defHeader, "$rt.inherit(", parent.qid, ",", "\"" + statement.name + "\"", ",",
                     // Objects are initialized when they're first accessed. This way we don't need to worry about
                     // changing the order of side effects by moving around object definitions.
                     "function () {\n",
-                    translateStatements(statement.body, {object: qid}),
+                    translateStatements(statement.body, {object: "this"}),
                     "});\n"
                     );
                 env.popFrame();
@@ -174,7 +173,7 @@ export function generateJS(story: ast.Story) {
                     throw new Error("On-handlers can only be defined on objects with a 'name' property.");
                 }
                 let event = translateExpression(statement.event);
-                return st.concat("$rt.onHandlers.push([", event, ",", nameEntry.qid, ", function () {", body, "}]);\n");
+                return st.concat("$rt.onHandlers.push([", event, ", this, function () {", body, "}]);\n");
 
             default:
                 return st.concat(translateExpression(statement), ";\n");

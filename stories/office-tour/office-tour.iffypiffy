@@ -13,7 +13,7 @@ Item Chair
 
     on touch
         if laptop.hasBeenTouched
-            say("You're touching the $chairType")
+            say("You're touching the ", chairType)
         else
             say("You can't touch the chair unless you touch the laptop first (because ... reasons)")
             playSound("mchammer.mp3")

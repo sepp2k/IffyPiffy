@@ -79,7 +79,7 @@ let latestMessage: string = "";
 
 let resourceDir = ".";
 
-export let onHandlers: [IffyPiffyVerb, string, () => void][] = [];
+export let onHandlers: [IffyPiffyVerb, IffyPiffyThing, () => void][] = [];
 
 export function init<T extends IffyPiffyObject>(obj: T): T {
     return obj && obj.$needsInit ? obj.$init() : obj;
@@ -140,12 +140,12 @@ export class Story {
         let tokens = command.split(/\s+/);
         if (tokens.length >= 2) {
             let [verb, ...objectParts] = tokens;
-            let object = simplifyObject(objectParts.join(" "));
+            let objectName = simplifyObject(objectParts.join(" "));
             for (let [handlerVerb, handlerObject, handler] of onHandlers) {
-                if(handlerObject === undefined) continue;
-                handlerObject = simplifyObject(handlerObject);
-                if (init(handlerVerb).syntax.split(/\s+/)[0] === verb && handlerObject === object) {
-                    handler();
+                if(handlerObject.name === undefined) continue;
+                let handlerObjectName = simplifyObject(handlerObject.name);
+                if (init(handlerVerb).syntax.split(/\s+/)[0] === verb && handlerObjectName === objectName) {
+                    handler.call(handlerObject);
                     return;
                 }
             }
