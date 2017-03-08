@@ -77,6 +77,14 @@ export namespace globals {
             say("You don't see that anywhere.");
         };
     });
+
+    export let quit = inherit(Verb, "quit", function () {
+        this.syntax = "quit";
+        this.defaultAction = function () {
+            say("Goodbye!");
+            isFinished = true;
+        };
+    });
 }
 
 function enterRoom(room: IffyPiffyRoom) {
@@ -91,6 +99,7 @@ function enterRoom(room: IffyPiffyRoom) {
 }
 
 let latestMessage: string = "";
+let isFinished = false;
 
 let resourceDir = ".";
 
@@ -144,20 +153,17 @@ export class Story {
     }
 
     start(_resourceDir = ".") {
-        this.isFinished = false;
+        isFinished = false;
         this.initializer();
         this.room = init(globals.startingRoom);
         latestMessage = "";
         resourceDir = _resourceDir;
         enterRoom(this.room);
         this.latestMessage = latestMessage;
+        this.isFinished = isFinished;
     }
 
     private handleInput(command: string) {
-        if (command === "quit") {
-            this.isFinished = true;
-            return;
-        }
         latestMessage = "";
         let tokens = command.split(/\s+/);
         if (tokens.length >= 2) {
@@ -185,5 +191,6 @@ export class Story {
         latestMessage = "";
         this.handleInput(command);
         this.latestMessage = latestMessage;
+        this.isFinished = isFinished;
     }
 }
