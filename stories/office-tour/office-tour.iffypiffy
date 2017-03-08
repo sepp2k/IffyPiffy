@@ -27,7 +27,10 @@ Chair chair1
     description = "The back of the chair has broken off"
 
     Item headRest
-        name = chairType
+        name = "head rest"
+
+        description = str("It's the chair's head rest. It's part of the chair's back, which has broken off and is lying on the ground. ",\
+            chairType, "-style chairs aren't very robust.")
     end
 end
 

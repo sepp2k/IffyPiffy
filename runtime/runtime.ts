@@ -31,7 +31,11 @@ export namespace globals {
     export let startingRoom: IffyPiffyRoom;
 
     export function say(...strs: string[]) {
-        latestMessage += strs.join("") + "\n";
+        latestMessage += str(...strs) + "\n";
+    }
+
+    export function str(...strs: string[]) {
+        return strs.join("");
     }
 
     export function playSound(soundFile: string) {
