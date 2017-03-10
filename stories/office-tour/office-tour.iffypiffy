@@ -16,7 +16,7 @@ Item Chair
             say("You're touching the ", chairType)
         else
             say("You can't touch the chair unless you touch the laptop first (because ... reasons)")
-            playSound("mchammer.mp3")
+            playSound("touch-failed.mp3")
         end
     end
 end
@@ -56,6 +56,6 @@ Verb touch
 
     override defaultAction()
         say("U can't touch this!")
-        playSound("mchammer.mp3")
+        playSound("touch-failed.mp3")
     end
 end
